@@ -1,0 +1,13 @@
+# Ignore the virtual environment directory
+venv/
+
+# Byte-compiled / cache files
+__pycache__/
+*.pyc
+# Environment files
+.env
+
+# OS or editor temp files
+*.swp
+*.swo
+.DS_Store
