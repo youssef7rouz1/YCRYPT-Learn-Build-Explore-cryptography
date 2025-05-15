@@ -88,4 +88,4 @@ def decrypt(ciphertext_hex: str, key: str) -> str:
     return pt_bytes.decode('utf-8', errors='replace')
 
 
-print(encrypt("pedia","Wiki"))
+print(encrypt("aaaaaaaaaaa","SECRET"))

@@ -1,166 +1,125 @@
 """
-Playfair cipher implementation.
+Playfair cipher implementation with correct encryption and decryption logic.
 
-Functions:
-- generate_key_matrix(key: str, alphabet: str = ...) -> List[List[str]]
-- preprocess_text(text: str, alphabet: str = ...) -> Tuple[List[Tuple[str,str]], List[int]]
-- find_position(ch: str, matrix: List[List[str]]) -> Tuple[int,int]
-- encrypt_digraph(pair: Tuple[str,str], matrix: List[List[str]]) -> Tuple[str,str]
-- decrypt_digraph(pair: Tuple[str,str], matrix: List[List[str]]) -> Tuple[str,str]
-- encrypt(plaintext: str, key: str, alphabet: str = ...) -> str
-- decrypt(ciphertext: str, key: str, alphabet: str = ...) -> str
+Features:
+- Maps 'J'→'I', preserves spaces.
+- Pads repeated letters with 'X' (or final letter if odd length) on encrypt.
+- Removes padding on decrypt (eliding inserted 'X' between duplicates and trailing pad).
 
-This version maps 'J' to 'I', preserves spaces, and uses uppercase internally.
+API:
+- encrypt(plaintext: str, key: str) -> str
+- decrypt(ciphertext: str, key: str) -> str
+
+Internal helpers:
+- _prepare_text: uppercase, map J→I, remove non-letters, record spaces
+- _chunk_text: form digraphs with 'X' padding for repeats or odd end
+- generate_key_matrix: build 5×5 matrix
+- _find: locate character in matrix
+- _enc_pair / _dec_pair: encrypt or decrypt one digraph
 """
+import re
 from typing import List, Tuple
 
+ALPHABET = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
+M = 5  # matrix size
 
-def generate_key_matrix(
-    key: str,
-    alphabet: str = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
-) -> List[List[str]]:
-    """
-    Builds a 5×5 key matrix for Playfair: maps J→I, dedups key, fills remaining letters.
-    """
+
+def generate_key_matrix(key: str) -> List[List[str]]:
     key = key.upper().replace('J', 'I')
-    # Keep only valid letters
-    key = ''.join(ch for ch in key if ch in alphabet)
-
     seen = set()
-    unique = []
+    seq = []
     for ch in key:
-        if ch not in seen:
+        if ch in ALPHABET and ch not in seen:
             seen.add(ch)
-            unique.append(ch)
-
-    # Append remaining alphabet letters
-    for ch in alphabet:
+            seq.append(ch)
+    for ch in ALPHABET:
         if ch not in seen:
-            unique.append(ch)
-
-    size = int(len(alphabet) ** 0.5)
-    return [unique[i*size:(i+1)*size] for i in range(size)]
+            seq.append(ch)
+    return [seq[i*M:(i+1)*M] for i in range(M)]
 
 
-def preprocess_text(
-    text: str,
-    alphabet: str = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
-) -> Tuple[List[Tuple[str,str]], List[int]]:
+def _prepare_text(text: str) -> Tuple[str, List[int]]:
     """
-    Cleans input: maps J→I, uppercases, removes non-letters, records spaces,
-    then splits into digraphs inserting 'X' between identical letters or at end.
-    Returns list of 2-letter tuples and original space indices.
+    Uppercase, map J→I, remove non-letters, record positions of spaces.
     """
-    spaces = [i for i, ch in enumerate(text) if ch == ' ']
-    clean = ''.join(
-        ch for ch in text.upper().replace('J', 'I')
-        if ch in alphabet
-    )
+    spaces = [i for i,c in enumerate(text) if c == ' ']
+    cleaned = ''.join(c for c in text.replace('J','I') if c.upper() in ALPHABET)
+    return cleaned, spaces
 
-    digraphs: List[Tuple[str,str]] = []
+
+def _chunk_text(s: str) -> List[Tuple[str,str]]:
+    """
+    Split into digraphs, inserting 'X' between identical letters or at end.
+    """
+    digraphs = []
     i = 0
-    while i < len(clean):
-        a = clean[i]
-        if i + 1 < len(clean) and clean[i+1] != a:
-            b = clean[i+1]
-            i += 2
-        else:
-            b = 'X'
-            i += 1
-        digraphs.append((a, b))
-
-    return digraphs, spaces
+    while i < len(s):
+        a = s[i]
+        b = s[i+1] if i+1 < len(s) and s[i+1] != a else 'X'
+        digraphs.append((a,b))
+        i += 2 if b != 'X' and i+1 < len(s) else 1
+    if len(digraphs[-1][1]) == 0:  # odd final
+        digraphs[-1] = (digraphs[-1][0], 'X')
+    return digraphs
 
 
-def find_position(
-    ch: str,
-    matrix: List[List[str]]
-) -> Tuple[int,int]:
-    """
-    Finds row, col of character in the 5×5 matrix.
-    """
-    for r, row in enumerate(matrix):
-        for c, val in enumerate(row):
-            if val == ch:
-                return r, c
-    raise ValueError(f"Character {ch!r} not found in key matrix")
+def _find(ch: str, matrix: List[List[str]]) -> Tuple[int,int]:
+    for r,row in enumerate(matrix):
+        for c,val in enumerate(row):
+            if val.lower() == ch.lower():
+                return r,c
+    raise ValueError(f"{ch} not in matrix")
 
 
-def encrypt_digraph(
-    pair: Tuple[str,str],
-    matrix: List[List[str]]
-) -> Tuple[str,str]:
-    """
-    Encrypts a two-letter digraph using Playfair rules.
-    """
-    r1, c1 = find_position(pair[0], matrix)
-    r2, c2 = find_position(pair[1], matrix)
-    size = len(matrix)
-
+def _enc_pair(a: str, b: str, mat: List[List[str]]) -> Tuple[str,str]:
+    r1,c1 = _find(a, mat)
+    r2,c2 = _find(b, mat)
     if r1 == r2:
-        return matrix[r1][(c1 + 1) % size], matrix[r2][(c2 + 1) % size]
+        return mat[r1][(c1+1)%M], mat[r2][(c2+1)%M]
     if c1 == c2:
-        return matrix[(r1 + 1) % size][c1], matrix[(r2 + 1) % size][c2]
-    return matrix[r1][c2], matrix[r2][c1]
+        return mat[(r1+1)%M][c1], mat[(r2+1)%M][c2]
+    return mat[r1][c2], mat[r2][c1]
 
 
-def decrypt_digraph(
-    pair: Tuple[str,str],
-    matrix: List[List[str]]
-) -> Tuple[str,str]:
-    """
-    Decrypts a two-letter digraph using inverse Playfair rules.
-    """
-    r1, c1 = find_position(pair[0], matrix)
-    r2, c2 = find_position(pair[1], matrix)
-    size = len(matrix)
-
+def _dec_pair(a: str, b: str, mat: List[List[str]]) -> Tuple[str,str]:
+    r1,c1 = _find(a, mat)
+    r2,c2 = _find(b, mat)
     if r1 == r2:
-        return matrix[r1][(c1 - 1) % size], matrix[r2][(c2 - 1) % size]
+        return mat[r1][(c1-1)%M], mat[r2][(c2-1)%M]
     if c1 == c2:
-        return matrix[(r1 - 1) % size][c1], matrix[(r2 - 1) % size][c2]
-    return matrix[r1][c2], matrix[r2][c1]
+        return mat[(r1-1)%M][c1], mat[(r2-1)%M][c2]
+    return mat[r1][c2], mat[r2][c1]
 
 
-def encrypt(
-    plaintext: str,
-    key: str,
-    alphabet: str = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
-) -> str:
-    """
-    End-to-end Playfair encryption: preserves spaces and uses 'X' padding.
-    """
-    matrix = generate_key_matrix(key, alphabet)
-    digraphs, spaces = preprocess_text(plaintext, alphabet)
-    cipher_chars: List[str] = []
-
-    for pair in digraphs:
-        a, b = encrypt_digraph(pair, matrix)
-        cipher_chars.extend([a, b])
-
+def encrypt(plaintext: str, key: str) -> str:
+    mat = generate_key_matrix(key)
+    cleaned, spaces = _prepare_text(plaintext)
+    digr = _chunk_text(cleaned)
+    out = []
+    for a,b in digr:
+        x,y = _enc_pair(a,b,mat)
+        out.extend([x,y])
     for pos in spaces:
-        cipher_chars.insert(pos, ' ')
+        out.insert(pos, ' ')
+    return ''.join(out)
 
-    return ''.join(cipher_chars)
 
-
-def decrypt(
-    ciphertext: str,
-    key: str,
-    alphabet: str = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
-) -> str:
-    """
-    End-to-end Playfair decryption: reverses encrypt, preserves spaces.
-    """
-    matrix = generate_key_matrix(key, alphabet)
-    digraphs, spaces = preprocess_text(ciphertext, alphabet)
-    plain_chars: List[str] = []
-
-    for pair in digraphs:
-        a, b = decrypt_digraph(pair, matrix)
-        plain_chars.extend([a, b])
-
+def decrypt(ciphertext: str, key: str) -> str:
+    mat = generate_key_matrix(key)
+    cleaned, spaces = _prepare_text(ciphertext)
+    if len(cleaned)%2:
+        cleaned += 'X'
+    digr = [(cleaned[i], cleaned[i+1]) for i in range(0, len(cleaned), 2)]
+    out = []
+    for a,b in digr:
+        x,y = _dec_pair(a,b,mat)
+        out.extend([x,y])
     for pos in spaces:
-        plain_chars.insert(pos, ' ')
-
-    return ''.join(plain_chars)
+        out.insert(pos, ' ')
+    result = ''.join(out)
+    # remove padding X between identical letters and trailing X
+    result = re.sub(r'(?<=([A-Z]))X(?=\1)', r'\1', result)
+    if result.endswith('X'):
+        result = result[:-1]
+    return result
+print(_chunk_text(_prepare_text(("zez grzkgr rDPZAPkrg " ))))
