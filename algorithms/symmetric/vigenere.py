@@ -8,6 +8,7 @@ input text must have only letters
 user can change the alphabet 
 """
 import string # used for string manipulation
+from typing import List , Tuple
 
 def generate_vigenere_table(alphabet : str) -> list[list[str]]:
     """
@@ -88,21 +89,6 @@ def encrypt(plaintext: str, key: str , alphabet : str) -> str:
     for i in space_positions:
         result.insert(i , " ") # insert the spaces in the ciphertext
     return ''.join(result) # return the result as a string
-
-def preprocess_ciphertext(
-    text: str,
-    alphabet: str = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
-) -> Tuple[List[Tuple[str,str]], List[int]]:
-    spaces = [i for i,ch in enumerate(text) if ch == ' ']
-    clean  = ''.join(
-        ch for ch in text.upper().replace('J','I')
-        if ch in alphabet
-    )
-    # split into pairs, assume even length (or pad if you must)
-    if len(clean) % 2 != 0:
-        raise ValueError("Ciphertext length must be even")
-    digraphs = [(clean[i], clean[i+1]) for i in range(0, len(clean), 2)]
-    return digraphs, spaces
 
 
 def decrypt(ciphertext: str, key: str , alphabet : str ) -> str:

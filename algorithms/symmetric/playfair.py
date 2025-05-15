@@ -164,7 +164,3 @@ def decrypt(
         plain_chars.insert(pos, ' ')
 
     return ''.join(plain_chars)
-
-
-print(encrypt("hide the gold in the tree stump","playfair example"))
-print(decrypt("BMOD ZBX DNAB EK UDM UIXM MOUVIF","playfair example"))

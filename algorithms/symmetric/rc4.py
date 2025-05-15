@@ -1,43 +1,39 @@
 """
-RC4 stream cipher implementation from first principles, accepting a text key.
+RC4 stream cipher implementation from first principles, accepting text inputs and producing hex outputs.
 
 API:
-- encrypt(plaintext: bytes, key: str) -> bytes
-- decrypt(ciphertext: bytes, key: str) -> bytes
+- encrypt(plaintext: str, key: str) -> str        # returns ciphertext as uppercase hex
+- decrypt(ciphertext_hex: str, key: str) -> str   # accepts hex, returns plaintext
 
 Under the hood:
-- _key_to_bytes(key: str) transforms a textual key into bytes
-- ksa(key_bytes: bytes) performs the Key-Scheduling Algorithm
-- prga(state: List[int]) yields an infinite keystream
-- generate_keystream(key_bytes: bytes, length: int) returns fixed-length keystream
-
-Encryption and decryption are identical: XOR with the keystream.
+- _str_to_bytes(s: str) -> bytes
+- ksa(key_bytes: bytes) -> List[int]
+- prga(state: List[int]) -> Iterator[int]
+- generate_keystream(key_bytes: bytes, length: int) -> bytes
 """
 from typing import Iterator, List
 
 
-def _text_to_bytes(key: str, encoding: str = 'utf-8') -> bytes:
+def _str_to_bytes(s: str, encoding: str = 'utf-8') -> bytes:
     """
-    Convert a textual key into bytes for RC4.
-    Raises ValueError if the key is empty.
+    Encode a Python string into bytes using the specified encoding.
+    Raises ValueError if the input string is empty.
     """
- 
-    return key.encode(encoding)
+    if s is None or len(s) == 0:
+        raise ValueError("Input string must be non-empty.")
+    return s.encode(encoding)
 
 
-def ksa(key: bytes) -> List[int]:
+def ksa(key_bytes: bytes) -> List[int]:
     """
     Key-Scheduling Algorithm (KSA).
-    Initializes state array S to 0..255 and scrambles it using the key bytes.
-
-    :param key: Secret key as bytes.
-    :return:  A 256-element list representing the scrambled state.
+    Initializes a 256-byte state array S, then scrambles it using the key.
     """
-    key_length = len(key)
+    key_length = len(key_bytes)
     S = list(range(256))
     j = 0
     for i in range(256):
-        j = (j + S[i] + key[i % key_length]) & 0xFF
+        j = (j + S[i] + key_bytes[i % key_length]) & 0xFF
         S[i], S[j] = S[j], S[i]
     return S
 
@@ -45,10 +41,7 @@ def ksa(key: bytes) -> List[int]:
 def prga(state: List[int]) -> Iterator[int]:
     """
     Pseudo-Random Generation Algorithm (PRGA).
-    Generates an infinite keystream from the scrambled state.
-
-    :param state: The 256-byte state permutation from ksa().
-    :yields:     Next keystream byte (0..255).
+    Generates an infinite stream of keystream bytes.
     """
     i = 0
     j = 0
@@ -62,39 +55,37 @@ def prga(state: List[int]) -> Iterator[int]:
 
 def generate_keystream(key_bytes: bytes, length: int) -> bytes:
     """
-    Produce a keystream of a specified length by running KSA then PRGA.
-
-    :param key_bytes: Key material as bytes.
-    :param length:    Number of keystream bytes to generate.
-    :return:          Keystream bytes.
+    Convenience wrapper: runs KSA then PRGA to produce exactly `length` keystream bytes.
     """
     state = ksa(key_bytes)
     stream = prga(state)
     return bytes(next(stream) for _ in range(length))
 
 
-def encrypt(plaintext: str, key: str) -> bytes:
+def encrypt(plaintext: str, key: str) -> str:
     """
-    Encrypt (or decrypt) data with RC4.
-    XORs the plaintext bytes with a keystream derived from the text key.
-
-    :param plaintext: Data to encrypt as bytes.
-    :param key:       Secret key as a string.
-    :return:          Ciphertext as bytes.
+    Encrypts a text string with RC4 using the provided key string.
+    Returns the ciphertext as an uppercase hex string (no prefix).
     """
-    key_bytes = _text_to_bytes(key)
-    keystream = generate_keystream(key_bytes, len(_text_to_bytes(plaintext)))
-    return bytes(p ^ k for p, k in zip(_text_to_bytes(plaintext), keystream))
+    pt_bytes = _str_to_bytes(plaintext)
+    key_bytes = _str_to_bytes(key)
+    keystream = generate_keystream(key_bytes, len(pt_bytes))
+    ct_bytes = bytes(p ^ k for p, k in zip(pt_bytes, keystream))
+    return ct_bytes.hex().upper()
 
 
-def decrypt(ciphertext: str, key: str) -> bytes:
+def decrypt(ciphertext_hex: str, key: str) -> str:
     """
-    Decrypt RC4 ciphertext. Identical to encrypt() since XOR is its own inverse.
-
-    :param ciphertext: Data to decrypt as bytes.
-    :param key:        Secret key as a string.
-    :return:           Recovered plaintext bytes.
+    Decrypts an RC4 ciphertext (hex string) with the provided key string.
+    Returns the resulting plaintext string.
     """
-    return encrypt(_text_to_bytes(ciphertext), key)
+    if ciphertext_hex is None:
+        raise ValueError("Ciphertext hex must be provided.")
+    ct_bytes = bytes.fromhex(ciphertext_hex)
+    key_bytes = _str_to_bytes(key)
+    keystream = generate_keystream(key_bytes, len(ct_bytes))
+    pt_bytes = bytes(c ^ k for c, k in zip(ct_bytes, keystream))
+    return pt_bytes.decode('utf-8', errors='replace')
 
-print(encrypt("Plaintext","Key"))
+
+print(encrypt("pedia","Wiki"))
