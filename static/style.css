@@ -1,0 +1,43 @@
+/* Base font */
+body {
+  font-family: 'Inter', sans-serif;
+  padding-top: 0;
+}
+
+/* Smooth transitions */
+.btn, .form-control, .form-select, #output {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Input focus */
+.form-control:focus, .form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(100, 149, 237, 0.25);
+}
+
+/* Dark theme variables */
+:root {
+  --bg: #ffffff;
+  --fg: #212529;
+  --card-bg: #f8f9fa;
+}
+html[data-theme='dark'] {
+  --bg: #212529;
+  --fg: #f8f9fa;
+  --card-bg: #2c2f33;
+}
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+}
+.card {
+  background-color: var(--card-bg);
+}
+#output {
+  background-color: var(--card-bg);
+  color: var(--fg);
+}
+
+/* Toast z-index fix */
+.toast {
+  z-index: 1200;
+}
