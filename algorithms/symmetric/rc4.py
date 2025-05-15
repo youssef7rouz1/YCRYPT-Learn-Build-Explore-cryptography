@@ -19,8 +19,7 @@ def _str_to_bytes(s: str, encoding: str = 'utf-8') -> bytes:
     Encode a Python string into bytes using the specified encoding.
     Raises ValueError if the input string is empty.
     """
-    if s is None or len(s) == 0:
-        raise ValueError("Input string must be non-empty.")
+    
     return s.encode(encoding)
 
 
@@ -79,8 +78,7 @@ def decrypt(ciphertext_hex: str, key: str) -> str:
     Decrypts an RC4 ciphertext (hex string) with the provided key string.
     Returns the resulting plaintext string.
     """
-    if ciphertext_hex is None:
-        raise ValueError("Ciphertext hex must be provided.")
+    
     ct_bytes = bytes.fromhex(ciphertext_hex)
     key_bytes = _str_to_bytes(key)
     keystream = generate_keystream(key_bytes, len(ct_bytes))
@@ -88,4 +86,3 @@ def decrypt(ciphertext_hex: str, key: str) -> str:
     return pt_bytes.decode('utf-8', errors='replace')
 
 
-print(encrypt("aaaaaaaaaaa","SECRET"))
