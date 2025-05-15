@@ -1,11 +1,11 @@
 """
-RC4 stream cipher implementation from first principles, accepting text inputs and producing hex outputs.
+RC4 stream cipher implementation.
 
-API:
+
 - encrypt(plaintext: str, key: str) -> str        # returns ciphertext as uppercase hex
 - decrypt(ciphertext_hex: str, key: str) -> str   # accepts hex, returns plaintext
 
-Under the hood:
+
 - _str_to_bytes(s: str) -> bytes
 - ksa(key_bytes: bytes) -> List[int]
 - prga(state: List[int]) -> Iterator[int]
@@ -17,7 +17,7 @@ from typing import Iterator, List
 def _str_to_bytes(s: str, encoding: str = 'utf-8') -> bytes:
     """
     Encode a Python string into bytes using the specified encoding.
-    Raises ValueError if the input string is empty.
+    
     """
     
     return s.encode(encoding)
@@ -26,7 +26,7 @@ def _str_to_bytes(s: str, encoding: str = 'utf-8') -> bytes:
 def ksa(key_bytes: bytes) -> List[int]:
     """
     Key-Scheduling Algorithm (KSA).
-    Initializes a 256-byte state array S, then scrambles it using the key.
+    
     """
     key_length = len(key_bytes)
     S = list(range(256))
@@ -40,7 +40,7 @@ def ksa(key_bytes: bytes) -> List[int]:
 def prga(state: List[int]) -> Iterator[int]:
     """
     Pseudo-Random Generation Algorithm (PRGA).
-    Generates an infinite stream of keystream bytes.
+    
     """
     i = 0
     j = 0
@@ -54,7 +54,7 @@ def prga(state: List[int]) -> Iterator[int]:
 
 def generate_keystream(key_bytes: bytes, length: int) -> bytes:
     """
-    Convenience wrapper: runs KSA then PRGA to produce exactly `length` keystream bytes.
+    runs KSA then PRGA to produce exactly `length` keystream bytes.
     """
     state = ksa(key_bytes)
     stream = prga(state)
