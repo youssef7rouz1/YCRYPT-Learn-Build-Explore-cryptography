@@ -2,7 +2,7 @@
 import os
 import string
 from typing import List
-from utils.S_box_R_con import S_BOX , INV_S_BOX , RCON
+from utils.AES_constants import S_BOX , INV_S_BOX , RCON
 
 # ——— AES-128 PARAMETERS ——————————————————————————————————————
 Nb = 4    # state width in 32-bit words

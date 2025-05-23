@@ -2,6 +2,7 @@
 import os
 import string
 from typing import List
+from utils.AES_constants import S_BOX , INV_S_BOX , RCON
 
 
 # ——— AES-128 PARAMETERS ——————————————————————————————————————
