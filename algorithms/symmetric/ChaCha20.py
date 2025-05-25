@@ -6,6 +6,10 @@ def rotl32(x: int, n: int) -> int:
     """
     Rotate the 32-bit word x left by n bits (0 ≤ n < 32), modulo 2³².
     """
+    # mask to 32 bits
+    x &= 0xFFFFFFFF
+    # rotation: left-shift and wrap-around the top bits
+    return ((x << n) & 0xFFFFFFFF) | (x >> (32 - n))
 
 def quarter_round(a: int, b: int, c: int, d: int) -> List[int]:
     """

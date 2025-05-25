@@ -98,6 +98,18 @@ def base64_to_bits(b64_str: str) -> str:
     """Convert base64 string to bit string."""
     return bytes_to_bits(base64.b64decode(b64_str))
 
+def base64_to_utf8(b64_str: str) -> str:
+    """Convert base64 string to bit string."""
+    return bits_to_utf8(base64_to_bits(b64_str))
+
+
+def utf8_to_base64(b64_str: str) -> str:
+    """Convert base64 string to bit string."""
+    return bits_to_base64(utf8_to_bits(b64_str))
+
+
+
+
 # Padding helper (PKCS#5)
 # ------------------------------------------------------------------
 

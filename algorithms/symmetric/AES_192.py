@@ -10,7 +10,6 @@ Nk = 6    # key length in 32-bit words
 Nr = 12   # number of rounds
 BLOCK_SIZE = 16
 
-# ——— Load the constans S box , RCON ————————————————————————————————————
 
 
 # ——— Core aes fucntions ————————————————————————————————————

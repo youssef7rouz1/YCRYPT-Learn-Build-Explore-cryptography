@@ -6,15 +6,25 @@ import string
 import binascii
 import os
 
-from Crypto.Cipher import DES
+from Crypto.Cipher import DES , DES3
 from Crypto.Util.Padding import pad, unpad
 
-from algorithms.symmetric.DES import encrypt_ecb, decrypt_ecb, encrypt_cbc, decrypt_cbc
+from algorithms.symmetric.DES import encrypt_cbc,encrypt_ecb,decrypt_cbc,decrypt_ecb,triple_des_decrypt_cbc,triple_des_decrypt_ecb,triple_des_encrypt_cbc,triple_des_encrypt_ecb
 
-def random_key_str() -> str:
+def random_key_des_str() -> str:
     # up to 8 printable ASCII chars (including empty)
     length = random.randint(0, 8)
     return ''.join(random.choice(string.printable.strip()) for _ in range(length))
+
+def random_key_3des_str() -> str:
+    # up to 24 printable ASCII chars (including empty)
+    length = random.randint(0, 24)
+    return ''.join(random.choice(string.printable.strip()) for _ in range(length))
+
+def random_iv_hex() -> str:
+    # exactly 16 hex digits = 8 bytes
+    return ''.join(random.choice('0123456789ABCDEF') for _ in range(16))
+
 
 def random_plaintext() -> str:
     # up to 100 printable characters (including empty)
@@ -24,7 +34,7 @@ def random_plaintext() -> str:
 @pytest.mark.parametrize("i", range(50))
 def test_encrypt_decrypt_ecb_random(i):
     pt_str  = random_plaintext()
-    key_str = random_key_str()
+    key_str = random_key_des_str()
 
     # Our implementation
     ct_hex      = encrypt_ecb(pt_str, key_str)
@@ -49,7 +59,7 @@ def test_encrypt_decrypt_ecb_random(i):
 @pytest.mark.parametrize("i", range(50))
 def test_encrypt_decrypt_cbc_random(i):
     pt_str   = random_plaintext()
-    key_str  = random_key_str()
+    key_str  = random_key_des_str()
     iv_bytes = os.urandom(8)
     iv_hex   = iv_bytes.hex().upper()
 
@@ -73,3 +83,36 @@ def test_encrypt_decrypt_cbc_random(i):
     dec_padded = cipher_dec.decrypt(binascii.unhexlify(ct_hex))
     dec_bytes  = unpad(dec_padded, DES.block_size)
     assert dec_bytes.decode('utf-8', errors='ignore') == pt_str
+
+
+@pytest.mark.parametrize("i", range(50))
+def test_encrypt_decrypt_triple_ecb_random(i):
+    # 1) Random plaintext and 3DES key‐string
+    pt_str  = random_plaintext()
+    key_str = random_key_3des_str()
+
+    # 2) Our triple‐DES ECB implementation
+    ct_hex    = triple_des_encrypt_ecb(pt_str, key_str)
+    recovered = triple_des_decrypt_ecb(ct_hex, key_str)
+
+    assert recovered == pt_str
+    assert all(c in string.hexdigits for c in ct_hex)
+
+    # 3) Cross‐check with PyCryptodome DES3
+    #    Derive 24‐byte master key, then set correct parity
+    master    = key_str.encode('utf-8')[:24].ljust(24, b'\x00')
+    key_bytes = DES3.adjust_key_parity(master)
+
+    #    Pad and encrypt
+    pt_bytes  = pt_str.encode('utf-8')
+    pt_padded = pad(pt_bytes, DES3.block_size)
+    cipher_enc = DES3.new(key_bytes, DES3.MODE_ECB)
+    expected_ct = cipher_enc.encrypt(pt_padded).hex().upper()
+    assert ct_hex.upper() == expected_ct
+
+    # 4) Separate decrypt instance for CBC
+    cipher_dec = DES3.new(key_bytes, DES3.MODE_ECB)
+    dec_padded = cipher_dec.decrypt(binascii.unhexlify(ct_hex))
+    dec_bytes  = unpad(dec_padded, DES3.block_size)
+    assert dec_bytes.decode('utf-8', errors='ignore') == pt_str
+

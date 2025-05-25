@@ -1,0 +1,23 @@
+ameliorations a faire : 
+	pour chaque algo chosii , ajotuer un boutin dans l'interface web qui envoie vers une page explication 
+	pour caesar cipher , on ajotute un petit diagramme montrat le decalge de l'alphabet , on peut aussi chosiir le sens de la rotation
+
+ 
+	say for each algorithm what types are inuts , keys , vectors , outputs and restrictiosn on them ,etc 
+restriction longeur de cle dans input aes 
+
+aes : actuellement , pour mode , si on ne met pas IV  , il sera généré aléatoirement , et on aura comme output une concatenation de vecteur iv et du chiffre , on doit le laisser comme ca 
+dans focntions utiles , on va ajouter des focntiond e generations de cles autoaotiques et de iv , aussi des cvnersion du output en hex , bytes , bits , etc
+changer les commentiares etc sur les AES selon la longuer de cle 32 16 24
+choose iv input type , can encode , decode it to different formats
+
+rc4 : 
+
+
+
+
+
+
+
+
+Explications dans pages medium et site : epxlication des algo

@@ -9,7 +9,7 @@ from utils.AES_constants import S_BOX , INV_S_BOX , RCON
 Nb = 4    # state width in 32-bit words
 Nk = 4    # key length in 32-bit words
 Nr = 10   # number of rounds
-BLOCK_SIZE = 16
+BLOCK_SIZE = 16 # aesis a block cipher , operates on 16 bytes blocks
 
 
 
@@ -19,14 +19,14 @@ BLOCK_SIZE = 16
 
 # ——— Core aes fucntions ————————————————————————————————————
 
-def gmul(a: int, b: int) -> int: #mutliplication in Galois Field
+def gmul(a: int, b: int) -> int: #mutliplication in Galois Field 2^8
     p = 0
     for _ in range(8): # no need for counter , we only want to repeat this 8 times
-        if b & 1:
-            p ^= a
-        hi = a & 0x80
-        a = ((a << 1) & 0xFF) ^ (0x1B if hi else 0)
-        b >>= 1
+        if b & 1: #if the lowest bit of b is one (b is odd)
+            p ^= a # wxor the current result with a 
+        hi = a & 0x80  #verify if highest bit of a is set  
+        a = ((a << 1) & 0xFF) ^ (0x1B if hi else 0) # left shift a and mask , then reduce with the galois polynome if the original high bit is 1  
+        b >>= 1 # right shift b to test on the next bit
     return p
 
 def sub_bytes(state: List[List[int]]) -> None:  #first step in AES : SubBytes

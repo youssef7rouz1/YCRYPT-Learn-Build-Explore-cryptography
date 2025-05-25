@@ -4,18 +4,6 @@ Playfair cipher implementation with correct encryption and decryption logic.
 Features:
 - Maps 'J'→'I', preserves spaces.
 - Pads repeated letters with 'X' (or final letter if odd length) on encrypt.
-- Removes padding on decrypt (eliding inserted 'X' between duplicates and trailing pad).
-
-API:
-- encrypt(plaintext: str, key: str) -> str
-- decrypt(ciphertext: str, key: str) -> str
-
-Internal helpers:
-- _prepare_text: uppercase, map J→I, remove non-letters, record spaces
-- _chunk_text: form digraphs with 'X' padding for repeats or odd end
-- generate_key_matrix: build 5×5 matrix
-- _find: locate character in matrix
-- _enc_pair / _dec_pair: encrypt or decrypt one digraph
 """
 import re
 from typing import List, Tuple
