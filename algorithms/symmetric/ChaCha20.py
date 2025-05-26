@@ -1,6 +1,6 @@
 import struct
 from typing import List
-from utils.conversion_padding_functions import (
+from utils.useful_functions import (
     utf8_to_bytes,
     bytes_to_utf8,
     hex_to_bytes,
@@ -129,10 +129,3 @@ def chacha20_decrypt(
 
 # ─── Example usage ────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
-    pt  = "azertyuiop"
-    key = "azertyazertyuiazertyuiazertyuiui"            # any UTF-8
-    nonce = "azertyuiopqs"      # up to 12 bytes UTF-8
-    ct  = chacha20_encrypt(pt, key, nonce)
-    print("Ciphertext:", ct)
-    print("Recovered:", chacha20_decrypt(ct, key, nonce))

@@ -11,7 +11,15 @@ dans focntions utiles , on va ajouter des focntiond e generations de cles autoao
 changer les commentiares etc sur les AES selon la longuer de cle 32 16 24
 choose iv input type , can encode , decode it to different formats
 
-rc4 : 
+
+
+pour triple des : la longeur de la cle doit etre supeeire a  16 bytes , dans des normal  si al cle es inferier à 8 octes , on ajoteu des 00 en bytes , si elle est sueprier a 8 bytes , on utilsie seuelemnt les 8 pemeirs octes  , en triple des , on va la diviser en 3 cles 
+triple des cbc , our initilization ector currently can be any size but we take into account only the 8 first bytes.
+
+for poly1305 we implemented it seperately as a standalone MAC with inputs (key  , msg , aad)  all in bytes format , hte msg here is the message to authenticate , in this case the ciphertext , 
+we currently append 0 to key and nonce if < 32bytes respectively 12 bytes
+we added many useful functions 
+we cleaned some previous code
 
 
 

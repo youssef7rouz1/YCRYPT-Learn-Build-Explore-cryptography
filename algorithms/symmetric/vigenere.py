@@ -130,8 +130,3 @@ def decrypt(ciphertext: str, key: str , alphabet : str ) -> str:
 
 
 
-cipher = "LXFoPV EF RNlR"
-plain="abcderk AEFFD rpogjrj"
-key="L EMON"
-
-print(decrypt(cipher , key ,string.ascii_uppercase ))

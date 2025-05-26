@@ -12,15 +12,10 @@ RC4 stream cipher implementation.
 - generate_keystream(key_bytes: bytes, length: int) -> bytes
 """
 from typing import Iterator, List
+from utils.useful_functions import * 
 
 
-def _str_to_bytes(s: str, encoding: str = 'utf-8') -> bytes:
-    """
-    Encode a Python string into bytes using the specified encoding.
-    
-    """
-    
-    return s.encode(encoding)
+_str_to_bytes=utf8_to_bytes
 
 
 def ksa(key_bytes: bytes) -> List[int]:

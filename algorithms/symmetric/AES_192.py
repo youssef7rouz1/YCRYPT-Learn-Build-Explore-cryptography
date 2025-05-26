@@ -3,6 +3,9 @@ import os
 import string
 from typing import List
 from utils.AES_constants import S_BOX , INV_S_BOX , RCON
+from utils.useful_functions import *
+
+
 
 # ——— AES-128 PARAMETERS ——————————————————————————————————————
 Nb = 4    # state width in 32-bit words
@@ -14,15 +17,7 @@ BLOCK_SIZE = 16
 
 # ——— Core aes fucntions ————————————————————————————————————
 
-def gmul(a: int, b: int) -> int: #mutliplication in Galois Field
-    p = 0
-    for _ in range(8): # no need for counter , we only want to repeat this 8 times
-        if b & 1:
-            p ^= a
-        hi = a & 0x80
-        a = ((a << 1) & 0xFF) ^ (0x1B if hi else 0)
-        b >>= 1
-    return p
+gmul=gf256_mul # from utils
 
 def sub_bytes(state: List[List[int]]) -> None:  #first step in AES : SubBytes
     for i in range(4):
@@ -73,14 +68,7 @@ def inv_mix_columns(state: List[List[int]]) -> None:
 
 
 
-def unpad_pkcs7(data: bytes) -> bytes:
-    pad_len = data[-1]
-    if pad_len < 1 or pad_len > BLOCK_SIZE:
-        raise ValueError("Invalid padding")
-    if data[-pad_len:] != bytes([pad_len]) * pad_len:
-        raise ValueError("Invalid padding")
-    return data[:-pad_len]
-
+unpad_pkcs7=pkcs7_unpad
 
 def decrypt_block(block: bytes, key: bytes) -> bytes:
     """AES-128 single-block decryption."""
@@ -154,8 +142,7 @@ def encrypt_block(block: bytes, key: bytes) -> bytes:
 
 
 def pad_pkcs7(data: bytes) -> bytes: #padding is required if size of message is not a multiple of block size
-    pad_len = BLOCK_SIZE - (len(data) % BLOCK_SIZE)
-    return data + bytes([pad_len]) * pad_len
+    return pkcs7_pad(data,BLOCK_SIZE)
 
 def _parse_iv(iv_str: str) -> bytes:  # the initilization vector used in cbc mode
     s = iv_str.strip()

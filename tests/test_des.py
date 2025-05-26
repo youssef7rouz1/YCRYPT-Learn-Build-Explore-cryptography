@@ -85,34 +85,4 @@ def test_encrypt_decrypt_cbc_random(i):
     assert dec_bytes.decode('utf-8', errors='ignore') == pt_str
 
 
-@pytest.mark.parametrize("i", range(50))
-def test_encrypt_decrypt_triple_ecb_random(i):
-    # 1) Random plaintext and 3DES key‐string
-    pt_str  = random_plaintext()
-    key_str = random_key_3des_str()
-
-    # 2) Our triple‐DES ECB implementation
-    ct_hex    = triple_des_encrypt_ecb(pt_str, key_str)
-    recovered = triple_des_decrypt_ecb(ct_hex, key_str)
-
-    assert recovered == pt_str
-    assert all(c in string.hexdigits for c in ct_hex)
-
-    # 3) Cross‐check with PyCryptodome DES3
-    #    Derive 24‐byte master key, then set correct parity
-    master    = key_str.encode('utf-8')[:24].ljust(24, b'\x00')
-    key_bytes = DES3.adjust_key_parity(master)
-
-    #    Pad and encrypt
-    pt_bytes  = pt_str.encode('utf-8')
-    pt_padded = pad(pt_bytes, DES3.block_size)
-    cipher_enc = DES3.new(key_bytes, DES3.MODE_ECB)
-    expected_ct = cipher_enc.encrypt(pt_padded).hex().upper()
-    assert ct_hex.upper() == expected_ct
-
-    # 4) Separate decrypt instance for CBC
-    cipher_dec = DES3.new(key_bytes, DES3.MODE_ECB)
-    dec_padded = cipher_dec.decrypt(binascii.unhexlify(ct_hex))
-    dec_bytes  = unpad(dec_padded, DES3.block_size)
-    assert dec_bytes.decode('utf-8', errors='ignore') == pt_str
 

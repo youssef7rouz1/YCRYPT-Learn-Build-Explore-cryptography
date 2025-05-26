@@ -87,5 +87,3 @@ def decrypt(ciphertext: str, key: str, pad: str = '_') -> str:
         pt = pt.rstrip(pad)
     return pt
 
-print(encrypt("Geeks for Geeks","HACK"))
-print(decrypt('e  kefGsGsrekoe_','HACK'))

@@ -1,4 +1,4 @@
-from utils.conversion_padding_functions import *
+from utils.useful_functions import *
 from utils.DES_constants import (
     initial_key_permutation,
     key_shift_sizes,
@@ -10,17 +10,12 @@ from utils.DES_constants import (
     S_BOXES,
 )
 
-# XOR two bit-strings of equal length
 
-def xor_bits(a, b):
-    return ''.join('0' if x == y else '1' for x, y in zip(a, b))
+
 
 # Rotate-left shift on bit-string
 
-def left_shift(bits, n):
-    return bits[n:] + bits[:n]
 
-# Permute bits according to 1-based table
 
 def permute(bits, table):
     return ''.join(bits[i - 1] for i in table)
@@ -318,11 +313,4 @@ def triple_des_decrypt_cbc(cipher_hex: str, key_str: str, iv: str) -> str:
     return bytes_to_utf8(raw)
 
 
-
-
-def main():
-    
-        print((triple_des_decrypt_cbc('54660D7BA2DEDF1103404546F987E34A24ADDD7A9D046AA9',"azertaazertaazertaazerta","azertyui")))
-if __name__=="__main__":
-    main()
 
