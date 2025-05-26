@@ -17,7 +17,8 @@ def chacha20_poly1305_encrypt(
     key_str: str,
     nonce_str: str,
     aad: str = "",
-    initial_counter: int = 1
+    initial_counter: int = 1,
+    nonce_length : int = 12
 ) -> Tuple[str, str]:
     """
     AEAD-ChaCha20-Poly1305 (IETF variant).
@@ -25,7 +26,7 @@ def chacha20_poly1305_encrypt(
     """
     # 1) Prepare key/nonce bytes
     key_bytes   = utf8_to_bytes(key_str)[:32].ljust(32, b'\x00')
-    nonce_bytes = utf8_to_bytes(nonce_str)[:12].ljust(12, b'\x00')
+    nonce_bytes = utf8_to_bytes(nonce_str)[:nonce_length].ljust(nonce_length, b'\x00')
     pt_bytes    = utf8_to_bytes(plaintext)
     aad_bytes   = utf8_to_bytes(aad)
 
