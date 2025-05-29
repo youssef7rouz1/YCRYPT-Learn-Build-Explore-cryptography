@@ -50,7 +50,7 @@ def chacha20_poly1305_encrypt(
     ct_hex   = bytes_to_hex(ct_bytes)
 
     # 4) Compute Poly1305 tag over (AAD, ciphertext)
-    tag_bytes = poly1305(one_time_key, aad_bytes, ct_bytes)
+    tag_bytes = poly1305(bytes_to_utf8(one_time_key), bytes_to_utf8(aad_bytes), bytes_to_utf8(ct_bytes))
     tag_hex   = tag_bytes.hex().upper()
 
     return ct_hex, tag_hex
@@ -80,7 +80,7 @@ def chacha20_poly1305_decrypt(
     one_time_key = block0[:32]
 
     # 2) Verify tag
-    expected_tag = poly1305(one_time_key, aad_bytes, ct_bytes).hex().upper()
+    expected_tag = poly1305(bytes_to_utf8(one_time_key), bytes_to_utf8(aad_bytes), bytes_to_utf8(ct_bytes)).hex().upper()
     if expected_tag != tag_hex.upper():
         raise ValueError("ChaCha20-Poly1305: authentication failed")
 

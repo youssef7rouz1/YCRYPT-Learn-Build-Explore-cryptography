@@ -14,12 +14,13 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(100, 149, 237, 0.25);
 }
 
-/* Dark theme variables */
+/* Light theme vars */
 :root {
   --bg: #ffffff;
   --fg: #212529;
   --card-bg: #f8f9fa;
 }
+/* Dark theme vars */
 html[data-theme='dark'] {
   --bg: #212529;
   --fg: #f8f9fa;
@@ -29,15 +30,10 @@ body {
   background-color: var(--bg);
   color: var(--fg);
 }
-.card {
-  background-color: var(--card-bg);
-}
-#output {
+.card, #output {
   background-color: var(--card-bg);
   color: var(--fg);
 }
 
-/* Toast z-index fix */
-.toast {
-  z-index: 1200;
-}
+/* Toast above everything */
+.toast { z-index: 1200; }

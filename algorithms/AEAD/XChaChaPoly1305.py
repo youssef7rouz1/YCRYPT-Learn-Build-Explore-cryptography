@@ -65,7 +65,7 @@ def xchacha20_poly1305_encrypt(
     ct_hex   = bytes_to_hex(ct_bytes)
 
     # 6) Compute Poly1305 tag over AAD and ciphertext
-    tag_bytes = poly1305(one_time_key, aad_bytes, ct_bytes)
+    tag_bytes = poly1305(bytes_to_utf8(one_time_key), bytes_to_utf8(aad_bytes), bytes_to_utf8(ct_bytes))
     tag_hex   = tag_bytes.hex().upper()
     return ct_hex, tag_hex
 
@@ -98,7 +98,7 @@ def xchacha20_poly1305_decrypt(
     one_time_key = block0[:32]
 
     # Verify tag
-    expected = poly1305(one_time_key, aad_bytes, ct_bytes).hex().upper()
+    expected = poly1305(bytes_to_utf8(one_time_key), bytes_to_utf8(aad_bytes), bytes_to_utf8(ct_bytes)).hex().upper()
     if expected != tag_hex.upper():
         raise ValueError("XChaCha20-Poly1305: authentication failed")
 
@@ -115,20 +115,3 @@ def xchacha20_poly1305_decrypt(
 
     return bytes_to_utf8(bytes(plaintext))
 
-# Example usage
-if __name__ == '__main__':
-    pt = "Hello, AEAD XChaCha20-Poly1305!"
-    key = "k"*32
-    nonce = "n"*24
-    aad = "authdata"
-    ct, tag = xchacha20_poly1305_encrypt(pt, key, nonce, aad)
-    print("CT:", ct)
-    print("TAG:", tag)
-    print("REC:", xchacha20_poly1305_decrypt(ct, tag, key, nonce, aad))
-
-
-
-    ct_and_tag = crypto_aead_xchacha20poly1305_ietf_encrypt(utf8_to_bytes(pt) , utf8_to_bytes(aad) , utf8_to_bytes(nonce) , utf8_to_bytes(key))
-    ct, tag = ct_and_tag[:-16], ct_and_tag[-16:]
-    print("lib CT:",  bytes_to_hex(ct))
-    print("lib TAG:", tag.hex().upper())

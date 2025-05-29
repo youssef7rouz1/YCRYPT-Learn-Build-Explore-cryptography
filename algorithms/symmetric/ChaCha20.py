@@ -189,11 +189,3 @@ def xchacha20_decrypt(cipher_hex: str, key_str: str, nonce_str: str, initial_cou
         for i,b in enumerate(ct[off:off+64]): pt.append(b ^ ks[i])
         ctr += 1
     return bytes_to_utf8(bytes(pt))
-
-# Example usage
-if __name__ == '__main__':
-    pt = 'azerty'
-    key = 'k'*32
-    nonce = 'n'*24
-    print('XChaCha20 CT:', xchacha20_encrypt(pt, key, nonce))
-    print('Recovered:', xchacha20_decrypt(xchacha20_encrypt(pt, key, nonce), key, nonce))

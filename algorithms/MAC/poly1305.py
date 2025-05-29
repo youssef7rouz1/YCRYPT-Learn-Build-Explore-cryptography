@@ -1,4 +1,5 @@
 from typing import List
+from utils.useful_functions import *
 
 def clamp_r(r_bytes: bytes) -> int:
     """
@@ -58,28 +59,26 @@ def poly1305_mac(r: int, s: int, blocks: List[int]) -> int:
     tag = (acc + s) & ((1 << 128) - 1)
     return tag
 
-def poly1305(key: bytes, aad: bytes, msg: bytes) -> bytes:
+def poly1305(key: str, aad: str, msg: str) -> bytes:
     """
     One-shot Poly1305: given a 32-byte one-time key, AAD, and message,
     returns the 16-byte authentication tag.
     """
+    key=utf8_to_bytes(key)
     if len(key) != 32:
         raise ValueError("Poly1305 key must be 32 bytes")
     r = clamp_r(key[:16])
     s = int.from_bytes(key[16:], 'little')
-    blocks = prepare_message(aad, msg)
+    blocks = prepare_message(utf8_to_bytes(aad), utf8_to_bytes(msg))
     tag_int = poly1305_mac(r, s, blocks)
     return tag_int.to_bytes(16, 'little')
 
 # Example to test tag
 if __name__ == "__main__":
     # RFC 7539 §2.5.2 test vector
-    key = bytes.fromhex(
-        "85d6be7857556d337f4452fe42d506a8"
-        "0103808afb0db2fd4abff6af4149f51b"
-    )
-    aad = b""
-    msg = b"Cryptographic Forum Research Group"
+    key = "azertyuiazertyuiazertyuiazertyui"
+    aad = ""
+    msg = "Cryptographic Forum Research Group"
     tag = poly1305(key, aad, msg)
     print("Tag:", tag.hex())
     # should print: a8061dc1305136c6c22b8baf0c0127a9

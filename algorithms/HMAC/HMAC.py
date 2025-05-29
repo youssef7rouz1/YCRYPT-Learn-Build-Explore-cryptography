@@ -76,9 +76,4 @@ def hmac(key: str, msg: str, hash_name: str) -> str:
     return bytes_to_hex(tag)
 
 # --------------------------------------------------------------------------- #
-if __name__ == "__main__":
-    
-    print(hmac("hello", "hello", "SHA-512"))
-
-
 

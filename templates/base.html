@@ -43,7 +43,6 @@
 
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <!-- Menu items -->
           <li class="nav-item">
             <a class="nav-link{% if request.endpoint=='index' %} active{% endif %}"
                href="{{ url_for('index') }}">
@@ -51,39 +50,15 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='encrypt' %} active{% endif %}"
-               href="{{ url_for('encrypt') }}">
-              <i class="bi bi-lock-fill"></i> Encrypt
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='decrypt' %} active{% endif %}"
-               href="{{ url_for('decrypt') }}">
-              <i class="bi bi-unlock-fill"></i> Decrypt
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='sign' %} active{% endif %}"
-               href="{{ url_for('sign') }}">
-              <i class="bi bi-pencil-fill"></i> Sign & Verify
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='hash' %} active{% endif %}"
-               href="{{ url_for('hash') }}">
-              <i class="bi bi-hash"></i> Hash
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='HMAC' %} active{% endif %}"
-               href="{{ url_for('HMAC') }}">
-              <i class="bi bi-hash"></i> HMAC
-            </a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link{% if request.endpoint=='contact' %} active{% endif %}"
                href="{{ url_for('contact') }}">
               <i class="bi bi-envelope-fill"></i> Contact
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint=='source_code' %} active{% endif %}"
+               href="{{ url_for('source_code') }}">
+              <i class="bi bi-code-slash"></i> Source Code
             </a>
           </li>
           <li class="nav-item">

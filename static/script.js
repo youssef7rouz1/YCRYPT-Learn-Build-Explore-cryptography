@@ -1,25 +1,4 @@
-// Mapping of category values to their algorithms
-const ALGOS = {
-  symmetric: [
-    { key: "caesar",   label: "Caesar Cipher"   },
-    { key: "vigenere", label: "Vigenère Cipher" }
-  ],
-  asymmetric: [
-    { key: "rsa", label: "RSA (2048-bit)" },
-    { key: "ecc", label: "Elliptic Curve (P-256)" }
-  ],
-  signature: [
-    { key: "rsa_sign", label: "RSA Signature" },
-    { key: "ecdsa",    label: "ECDSA"         }
-  ],
-  hashing: [
-    { key: "sha256",     label: "SHA-256"     },
-    { key: "hmac_sha256", label: "HMAC-SHA256" }
-  ]
-};
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Elements
   const htmlEl      = document.documentElement;
   const themeBtn    = document.getElementById("theme-toggle");
   const themeIcon   = document.getElementById("theme-icon");
@@ -32,115 +11,130 @@ document.addEventListener("DOMContentLoaded", () => {
   const toastEl     = document.getElementById("copy-toast");
   const copyToast   = new bootstrap.Toast(toastEl);
 
-  // 1. Initialize all Bootstrap tooltips
+  // 1. Tooltips
   document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
     new bootstrap.Tooltip(el);
   });
 
-  // 2. Dark/Light mode toggle
-  const storedTheme = localStorage.getItem("theme") || "light";
-  htmlEl.setAttribute("data-theme", storedTheme);
-  updateThemeIcon(storedTheme);
-
+  // 2. Theme Toggle
+  const stored = localStorage.getItem("theme") || "light";
+  htmlEl.setAttribute("data-theme", stored);
+  updateIcon(stored);
   themeBtn.addEventListener("click", () => {
-    const current = htmlEl.getAttribute("data-theme");
-    const next = current === "light" ? "dark" : "light";
+    const next = htmlEl.getAttribute("data-theme") === "light" ? "dark" : "light";
     htmlEl.setAttribute("data-theme", next);
     localStorage.setItem("theme", next);
-    updateThemeIcon(next);
+    updateIcon(next);
   });
-
-  function updateThemeIcon(theme) {
-    themeIcon.className = theme === "light"
-      ? "bi bi-moon-fill"
-      : "bi bi-sun-fill";
+  function updateIcon(theme) {
+    themeIcon.className = theme === "light" ? "bi bi-moon-fill" : "bi bi-sun-fill";
   }
 
-  // 3. Populate Algorithm dropdown when Category changes
+  // 3. Category → Algorithm
   catSelect.addEventListener("change", () => {
-    const cat = catSelect.value;
     algoSelect.innerHTML = `<option value="" disabled selected>Select algo…</option>`;
-
-    if (ALGOS[cat]) {
-      ALGOS[cat].forEach(({key, label}) => {
-        const opt = document.createElement("option");
-        opt.value = key;
-        opt.textContent = label;
-        algoSelect.append(opt);
-      });
-    }
-
-    // Clear param fields and output
     paramFields.innerHTML = "";
     outputPre.textContent = "";
+    runBtn.disabled = false;
+
+    (ALGOS[catSelect.value] || []).forEach(({key, label}) => {
+      const o = document.createElement("option");
+      o.value = key; o.textContent = label;
+      algoSelect.append(o);
+    });
   });
 
-  // 4. Show parameter inputs when Algorithm changes
+  // 4. Algorithm → Params (with Encrypt/Decrypt toggling)
   algoSelect.addEventListener("change", () => {
-    const algo = algoSelect.value;
     paramFields.innerHTML = "";
+    outputPre.textContent = "";
 
-    switch (algo) {
-      case "caesar":
-        paramFields.innerHTML = `
-          <div class="mb-3">
-            <label for="shift" class="form-label">Shift</label>
-            <input type="number" class="form-control" id="shift" name="shift"
-                   value="3" required>
-          </div>`;
-        break;
+    const specs = ALGO_PARAMS[algoSelect.value] || [];
+    let actionSelect = null;
 
-      case "vigenere":
-        paramFields.innerHTML = `
-          <div class="mb-3">
-            <label for="key" class="form-label">Key</label>
-            <input type="text" class="form-control" id="key" name="key"
-                   placeholder="Enter keyword" required>
-          </div>`;
-        break;
+    specs.forEach(s => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "mb-3";
+      if (s.show_when) {
+        wrapper.style.display = "none";
+        wrapper.dataset.showWhen = s.show_when;
+      }
 
-      case "rsa":
-      case "rsa_sign":
-      case "ecc":
-        paramFields.innerHTML = `
-          <div class="mb-3">
-            <label for="keysize" class="form-label">Key size (bits)</label>
-            <select class="form-select" id="keysize" name="keysize">
-              <option value="1024">1024</option>
-              <option value="2048" selected>2048</option>
-              <option value="3072">3072</option>
-            </select>
-          </div>`;
-        break;
+      // label
+      if (s.label) {
+        const lbl = document.createElement("label");
+        lbl.htmlFor = s.name;
+        lbl.className = "form-label";
+        lbl.textContent = s.label;
+        wrapper.append(lbl);
+      }
 
-      case "sha256":
-      case "hmac_sha256":
-        // No extra parameters for hashing algorithms
-        break;
+      // input/select/textarea
+      let input;
+      if (s.type === "textarea") {
+        input = document.createElement("textarea");
+        input.className = "form-control";
+        input.rows = s.rows || 3;
+      }
+      else if (s.type === "select") {
+        input = document.createElement("select");
+        input.className = "form-select";
+        s.options.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = o.textContent = opt;
+          input.append(o);
+        });
+      }
+      else {
+        input = document.createElement("input");
+        input.type = s.type;
+        input.className = "form-control";
+        if (s.min != null)   input.min         = s.min;
+        if (s.max != null)   input.max         = s.max;
+        if (s.value != null) input.value       = s.value;
+      }
 
-      default:
-        // For any future algorithms, leave blank
-        break;
+      // common attrs
+      input.id = s.name;
+      input.name = s.name;
+      if (s.required)    input.required    = true;
+      if (s.placeholder) input.placeholder = s.placeholder;
+
+      wrapper.append(input);
+      paramFields.append(wrapper);
+
+      if (s.name === "action") {
+        actionSelect = input;
+      }
+    });
+
+    // if we have an action select, wire up show_when logic
+    if (actionSelect) {
+      actionSelect.addEventListener("change", e => {
+        const val = e.target.value;
+        paramFields.querySelectorAll("div[data-show-when]").forEach(w => {
+          w.style.display = (w.dataset.showWhen === val) ? "block" : "none";
+        });
+      });
+      // trigger once to hide everything except action
+      actionSelect.dispatchEvent(new Event("change"));
     }
   });
 
-  // 5. Show spinner on form submit
-  const form = document.getElementById("crypto-form");
-  if (form) {
-    form.addEventListener("submit", () => {
-      runBtn.disabled = true;
-      runBtn.innerHTML = `
-        <span class="spinner-border spinner-border-sm" role="status"
-              aria-hidden="true"></span> Processing…`;
-    });
-  }
+  // 5. Show spinner on submit
+  document.getElementById("crypto-form").addEventListener("submit", () => {
+    runBtn.disabled = true;
+    runBtn.innerHTML = `
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      Processing…`;
+  });
 
-  // 6. Copy-to-clipboard functionality
+  // 6. Copy output
   copyBtn.addEventListener("click", () => {
-    const text = outputPre.textContent.trim();
-    if (!text) return;
-    navigator.clipboard.writeText(text)
+    const txt = outputPre.textContent.trim();
+    if (!txt) return;
+    navigator.clipboard.writeText(txt)
       .then(() => copyToast.show())
-      .catch(err => console.error("Copy failed:", err));
+      .catch(console.error);
   });
 });

@@ -116,18 +116,4 @@ def aes_gcm_decrypt(
     return bytes_to_utf8(P)
 
 
-if __name__=="__main__":
-    pt="azeyuiop"
-    key="azeazertyuirtyui"
-    nonce="azertyuiazer"
-    aad="RFC3610]."
-    key_bytes=utf8_to_bytes(key)
-    print("ct = " , aes_gcm_encrypt(pt , key , nonce , aad )[0])
-    print("tag = " , aes_gcm_encrypt(pt , key , nonce , aad )[1])
-    aesgcm      = AESGCM(key_bytes)
-    expected_ct = aesgcm.encrypt(utf8_to_bytes(nonce), utf8_to_bytes(pt) , utf8_to_bytes(aad))
-    expected_tag = expected_ct[-16:]
-    expected_ct_only = expected_ct[:-16]
-    print("expected_ct = " , bytes_to_hex(expected_ct_only))
-    print("expected_tag = " , bytes_to_hex(expected_tag))
 
