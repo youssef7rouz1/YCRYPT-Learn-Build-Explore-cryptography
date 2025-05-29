@@ -45,7 +45,6 @@ def test_chacha20_poly1305_random(i):
     ct_hex, tag_hex = chacha20_poly1305_encrypt(pt_str, key_str, nonce_str, aad_str)
     recovered       = chacha20_poly1305_decrypt(ct_hex, tag_hex, key_str, nonce_str, aad_str)
     assert recovered == pt_str
-    # ciphertext and tag must be hex strings
 
     # 3) Cross-check with PyCryptodome AEAD
     key_bytes   = utf8_to_bytes(key_str)[:32].ljust(32, b'\x00')
@@ -53,7 +52,6 @@ def test_chacha20_poly1305_random(i):
     pt_bytes    = pt_str.encode('utf-8', errors='ignore')
     aad_bytes   = aad_str.encode('utf-8', errors='ignore')
 
-    # Built-in AEAD
     aead = ChaCha20_Poly1305.new(key=key_bytes, nonce=nonce_bytes)
     if aad_bytes:
         aead.update(aad_bytes)
@@ -63,7 +61,6 @@ def test_chacha20_poly1305_random(i):
     assert ct_hex.upper() == expected_ct.hex().upper()
     assert tag_hex.upper() == expected_tag.hex().upper()
 
-    # 4) Separate decrypt instance
     aead2 = ChaCha20_Poly1305.new(key=key_bytes, nonce=nonce_bytes)
     if aad_bytes:
         aead2.update(aad_bytes)

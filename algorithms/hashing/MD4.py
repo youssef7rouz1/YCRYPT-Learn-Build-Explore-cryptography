@@ -137,7 +137,3 @@ def md4(message: str) -> hex :
     return bytes_to_hex(md4_finalize((A , B  , C , D)))
 
 
-
-if __name__ == "__main__":
-    h = md4("hello")
-    print(h)  # should print: aa010fbc1d14c795d86ef98c95479d17

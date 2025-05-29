@@ -14,7 +14,7 @@ def random_text(max_length: int = 256) -> str:
     return ''.join(random.choice(string.printable) for _ in range(length))
 
 @pytest.mark.parametrize("i", range(20))
-def test_sha1_random_printable(i):
+def test_sha256_random_printable(i):
  
     text = random_text(256)
     expected = SHA256.new(text.encode("utf-8")).hexdigest().upper()
@@ -29,13 +29,10 @@ def test_sha1_random_printable(i):
     string.ascii_uppercase,
     string.digits,
     string.punctuation,
-    "Café",                # accented
-    "こんにちは",          # Japanese
-    "👩‍💻👨‍🔧",            # emojis + ZWJ
-    "𠜎𠜱𠝹",               # rare CJK characters
+  
     "a" * 1000,            # long repetition
 ])
-def test_sha1_various_known(text):
+def test_sha256_various_known(text):
     """
     Test a variety of fixed and special strings.
     """

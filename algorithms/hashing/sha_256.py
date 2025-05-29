@@ -149,7 +149,3 @@ def sha256(message: str) -> str:
     for block in blocks:
         state = sha256_compress_block(state, block)
     return bytes_to_hex(sha256_finalize(state))
-
-# Quick test
-if __name__ == "__main__":
-    print("SHA-256('hello') =", sha256("hello"))  # Expect: 2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824

@@ -106,6 +106,3 @@ def md5(message: str) -> str:
     return bytes_to_hex(digest)
 
 
-if __name__=="__main__":
-    msg="hello"
-    print("hash=" , md5(msg))

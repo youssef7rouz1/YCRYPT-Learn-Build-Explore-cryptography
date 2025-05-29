@@ -119,7 +119,3 @@ def sha1(message: str) -> str:
 
     digest = sha1_finalize(state)
     return bytes_to_hex(digest)
-
-# Quick test
-if __name__ == "__main__":
-    print(sha1("hello"))  

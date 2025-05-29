@@ -137,9 +137,3 @@ def sha512(message: str) -> str:
         state = sha512_compress_block(state, blk)
     return bytes_to_hex(sha512_finalize(state))
 
-# Quick sanity check
-if __name__ == "__main__":
-    import hashlib
-    out = sha512("hello")
-    print("SHA-512('hello') =", out)
-    print(" matches hashlib? ", out == hashlib.sha512(b"hello").hexdigest().upper())

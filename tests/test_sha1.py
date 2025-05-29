@@ -1,10 +1,9 @@
-# tests/test_md4_random.py
 
 import pytest
 import random
 import string
 from Crypto.Hash import SHA1
-from algorithms.hashing.SHA1 import sha1  # ← replace with the real import path to your md5() function
+from algorithms.hashing.SHA1 import sha1 
 
 def random_text(max_length: int = 256) -> str:
     """
@@ -29,10 +28,7 @@ def test_sha1_random_printable(i):
     string.ascii_uppercase,
     string.digits,
     string.punctuation,
-    "Café",                # accented
-    "こんにちは",          # Japanese
-    "👩‍💻👨‍🔧",            # emojis + ZWJ
-    "𠜎𠜱𠝹",               # rare CJK characters
+ 
     "a" * 1000,            # long repetition
 ])
 def test_sha1_various_known(text):

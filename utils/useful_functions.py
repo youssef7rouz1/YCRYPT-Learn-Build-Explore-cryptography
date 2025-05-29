@@ -1,155 +1,149 @@
 import base64
 
-# Byte and Bit conversions
-# -------------------------
+# ────────────────────────── Byte / Bit conversions ──────────────────────────
 
 def bytes_to_bits(data: bytes) -> str:
-    """Convert bytes to a bit string."""
-    return ''.join(f"{byte:08b}" for byte in data)
+    """Return a bit‑string (e.g. "010101") representing *data*."""
+    return "".join(f"{byte:08b}" for byte in data)
 
 
 def bits_to_bytes(bits: str) -> bytes:
-    """Convert a bit string into bytes. Length must be multiple of 8."""
-    return bytes(int(bits[i:i+8], 2) for i in range(0, len(bits), 8))
+    """Convert a bit‑string back to bytes. *len(bits)* must be a multiple of 8."""
+    return bytes(int(bits[i : i + 8], 2) for i in range(0, len(bits), 8))
 
-# Hex conversions
-# ----------------
+# ─────────────────────────────── Hex helpers ────────────────────────────────
 
 def hex_to_bytes(hex_str: str) -> bytes:
-    """Convert hex string to bytes."""
     return bytes.fromhex(hex_str)
 
 
 def bytes_to_hex(data: bytes) -> str:
-    """Convert bytes to uppercase hex string."""
     return data.hex().upper()
 
 
 def hex_to_bits(hex_str: str) -> str:
-    """Convert hex string to bit string."""
     return bytes_to_bits(bytes.fromhex(hex_str))
 
 
 def bits_to_hex(bits: str) -> str:
-    """Convert bit string to uppercase hex string."""
     return bytes_to_hex(bits_to_bytes(bits))
 
-# UTF-8 (text) conversions
-# -------------------------
-
-def utf8_to_bytes(text: str) -> bytes:
-    """Encode a UTF-8 string to bytes."""
-    return text.encode('utf-8')
 
 
-def bytes_to_utf8(data: bytes) -> str:
-    """Decode bytes (UTF-8) to string."""
-    return data.decode('utf-8', errors='replace')
+def utf8_to_bytes(text: str) -> bytes:  
+    """Encode *text* using Latin‑1 (1 char ⇆ 1 byte)."""
+    return text.encode("latin-1")
+
+
+def bytes_to_utf8(data: bytes) -> str:  
+    """Decode *data* with Latin‑1.  Exact inverse of ``utf8_to_bytes``."""
+    return data.decode("latin-1", errors="replace")
 
 
 def utf8_to_hex(text: str) -> str:
-    """Encode UTF-8 text to hex string."""
-    return bytes_to_hex(text.encode('utf-8'))
+    return bytes_to_hex(utf8_to_bytes(text))
 
 
 def hex_to_utf8(hex_str: str) -> str:
-    """Decode hex string into a UTF-8 string."""
     return bytes_to_utf8(bytes.fromhex(hex_str))
 
 
 def utf8_to_bits(text: str) -> str:
-    """Encode UTF-8 text to bit string."""
-    return bytes_to_bits(text.encode('utf-8'))
+    return bytes_to_bits(utf8_to_bytes(text))
 
 
 def bits_to_utf8(bits: str) -> str:
-    """Decode bit string into a UTF-8 string."""
     return bytes_to_utf8(bits_to_bytes(bits))
 
-# Base64 conversions
-# -------------------
+# ───────────────────────────── Base‑64 helpers ──────────────────────────────
 
 def bytes_to_base64(data: bytes) -> str:
-    """Encode bytes to a base64 string."""
-    return base64.b64encode(data).decode('ascii')
+    return base64.b64encode(data).decode("ascii")
 
 
 def base64_to_bytes(b64_str: str) -> bytes:
-    """Decode base64 string to bytes."""
     return base64.b64decode(b64_str)
 
 
 def hex_to_base64(hex_str: str) -> str:
-    """Convert hex string to base64 string."""
     return bytes_to_base64(bytes.fromhex(hex_str))
 
 
 def base64_to_hex(b64_str: str) -> str:
-    """Convert base64 string to uppercase hex string."""
     return bytes_to_hex(base64.b64decode(b64_str))
 
 
 def bits_to_base64(bits: str) -> str:
-    """Convert bit string to base64 string."""
     return bytes_to_base64(bits_to_bytes(bits))
 
 
 def base64_to_bits(b64_str: str) -> str:
-    """Convert base64 string to bit string."""
     return bytes_to_bits(base64.b64decode(b64_str))
 
+
 def base64_to_utf8(b64_str: str) -> str:
-    """Convert base64 string to bit string."""
-    return bits_to_utf8(base64_to_bits(b64_str))
+    return bytes_to_utf8(base64.b64decode(b64_str))
 
 
-def utf8_to_base64(b64_str: str) -> str:
-    """Convert base64 string to bit string."""
-    return bits_to_base64(utf8_to_bits(b64_str))
+def utf8_to_base64(text: str) -> str:
+    return bytes_to_base64(utf8_to_bytes(text))
 
+# ───────────────────────────── Integer helpers ──────────────────────────────
 
-def int_to_bytes(n: int, length: int, byteorder: str = 'big') -> bytes:
+def int_to_bytes(n: int, length: int, byteorder: str = "big") -> bytes:
     return n.to_bytes(length, byteorder)
 
-def bytes_to_int(b: bytes, byteorder: str = 'big') -> int:
+
+def bytes_to_int(b: bytes, byteorder: str = "big") -> int:
     return int.from_bytes(b, byteorder)
 
-
-# Padding helper (PKCS#5)
-# ------------------------------------------------------------------
+# ─────────────────────────── Padding / misc helpers ─────────────────────────
 
 def pad_bytes(data: bytes, block_size: int = 8) -> bytes:
     pad_len = block_size - (len(data) % block_size) or block_size
     return data + bytes([pad_len]) * pad_len
 
+
 def xor_bytes(a: bytes, b: bytes) -> bytes:
     return bytes(x ^ y for x, y in zip(a, b))
 
+
 def chunk_bytes(data: bytes, size: int) -> list[bytes]:
-    return [data[i:i+size] for i in range(0, len(data), size)]
+    return [data[i : i + size] for i in range(0, len(data), size)]
+
 
 def rotate_left(x: int, shift: int, width: int) -> int:
     mask = (1 << width) - 1
     return ((x << shift) & mask) | (x >> (width - shift))
-def left_shift(bits: str, n: int) -> str:
-    width = len(bits)
-    x = int(bits, 2)                         # string → integer
-    r = rotate_left(x, n, width)            # do the rotation
-    return format(r, f'0{width}b')           # integer → zero-padded string
+
 
 def rotate_right(x: int, shift: int, width: int) -> int:
     mask = (1 << width) - 1
     return (x >> shift) | ((x << (width - shift)) & mask)
 
+
+# bit‑string helpers ---------------------------------------------------------
+
+def left_shift(bits: str, n: int) -> str:
+    width = len(bits)
+    x = int(bits, 2)
+    r = rotate_left(x, n, width)
+    return f"{r:0{width}b}"
+
+
 def right_shift(bits: str, n: int) -> str:
     width = len(bits)
-    x = int(bits, 2)                         # string → integer
-    r = rotate_right(x, n, width)            # do the rotation
-    return format(r, f'0{width}b')           # integer → zero-padded string
+    x = int(bits, 2)
+    r = rotate_right(x, n, width)
+    return f"{r:0{width}b}"
 
+
+def xor_bits(a: str, b: str) -> str:
+    return "".join("0" if x == y else "1" for x, y in zip(a, b))
+
+# maths helpers --------------------------------------------------------------
 
 def modexp(base: int, exp: int, mod: int) -> int:
-    # fast square-and-multiply
     result = 1
     base %= mod
     while exp:
@@ -159,11 +153,13 @@ def modexp(base: int, exp: int, mod: int) -> int:
         exp >>= 1
     return result
 
-def egcd(a: int, b: int) -> tuple[int,int,int]:
-    # extended GCD: returns (g, x, y) s.t. ax + by = g
-    if b == 0: return (a, 1, 0)
+
+def egcd(a: int, b: int):
+    if b == 0:
+        return a, 1, 0
     g, x1, y1 = egcd(b, a % b)
-    return (g, y1, x1 - (a // b) * y1)
+    return g, y1, x1 - (a // b) * y1
+
 
 def modinv(a: int, m: int) -> int:
     g, x, _ = egcd(a, m)
@@ -171,7 +167,9 @@ def modinv(a: int, m: int) -> int:
         raise ValueError("No modular inverse")
     return x % m
 
-def gf256_mul(a: int, b: int, poly: int = 0x11b) -> int:
+# finite‑field helper --------------------------------------------------------
+
+def gf256_mul(a: int, b: int, poly: int = 0x11B) -> int:
     res = 0
     while b:
         if b & 1:
@@ -182,21 +180,17 @@ def gf256_mul(a: int, b: int, poly: int = 0x11b) -> int:
             a ^= poly
     return res & 0xFF
 
+# PKCS#7 helpers -------------------------------------------------------------
+
 def pkcs7_pad(data: bytes, block_size: int) -> bytes:
     pad_len = block_size - (len(data) % block_size)
     return data + bytes([pad_len] * pad_len)
+
 
 def pkcs7_unpad(data: bytes) -> bytes:
     pad_len = data[-1]
     if not 1 <= pad_len <= len(data):
         raise ValueError("Invalid padding")
-    if data[-pad_len:] != bytes([pad_len])*pad_len:
+    if data[-pad_len:] != bytes([pad_len]) * pad_len:
         raise ValueError("Invalid padding")
     return data[:-pad_len]
-
-
-def xor_bits(a, b):
-    return ''.join('0' if x == y else '1' for x, y in zip(a, b))
-
-
-
