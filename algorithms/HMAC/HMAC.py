@@ -78,6 +78,7 @@ def hmac(key: str, msg: str, hash_name: str) -> str:
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     
-    print(hmac("hello", "hello", ""))
+    print(hmac("hello", "hello", "SHA-512"))
+
 
 

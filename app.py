@@ -150,11 +150,6 @@ def contact():
         
     )
 
-@app.route("/explanations", methods=["GET"])
-def explanations():
-    return render_template(
-        "Explanations.html"
-    )
 
 @app.route("/sourcecode", methods=["GET"])
 def sourcecode():
