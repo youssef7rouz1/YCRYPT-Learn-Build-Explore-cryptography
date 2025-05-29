@@ -22,6 +22,21 @@ we added many useful functions
 we cleaned some previous code
 
 
+we always work on utf 8 , so if a user inputs unrecognised characters like é , chinese or anything like that , its an error 
+
+
+
+assertiosn on values of the inputs for the front end 
+aes key length  , aes iv length 
+chacha20 nonce and key kengths  , xchacha nonce and key 
+poly 1305 key length
+
+
+
+
+
+
+
 
 
 

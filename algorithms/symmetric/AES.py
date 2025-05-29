@@ -231,13 +231,3 @@ def decrypt_ctr(ciphertext: str, key: str, nonce_str: str="") -> str:
     return out.decode('utf-8')
 
 
-if __name__ == '__main__':
-    pt = "azertyuiop"
-    key = "azeazertyuiazertyuiazertyuirtyui"
-    iv="azdkfazdkflrazdk"
-    print("ct = " , encrypt_ctr(pt,key , iv))
-    print ("original pt = "  , decrypt_ecb("30e9d372ca901afa4dff08096764aa37" , key))
-
-
-
-    

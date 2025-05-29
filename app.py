@@ -3,17 +3,73 @@ from datetime import datetime
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
 
-
+# AES (modes already have distinct names)
 from algorithms.symmetric.AES import (
-    encrypt_ecb, decrypt_ecb,
-    encrypt_cbc, decrypt_cbc,
-    encrypt_ctr, decrypt_ctr
+    encrypt_ecb,
+    decrypt_ecb,
+    encrypt_cbc,
+    decrypt_cbc,
+    encrypt_ctr,
+    decrypt_ctr,
 )
+
+# Caesar
+from algorithms.symmetric.caesar import (
+    encrypt  as caesar_encrypt,
+    decrypt  as caesar_decrypt,
+)
+
+# ChaCha20 variants (their names are already unique)
+from algorithms.symmetric.ChaCha20 import (
+    chacha20_encrypt,
+    chacha20_decrypt,
+    xchacha20_encrypt  as xchacha20_encrypt,
+    xchacha20_decrypt  as xchacha20_decrypt,
+)
+
+# Columnar Transposition
+from algorithms.symmetric.columnar_transpostion import (
+    encrypt  as columnar_encrypt,
+    decrypt  as columnar_decrypt,
+)
+
+# DES & 3DES
+from algorithms.symmetric.DES import (
+    encrypt_ecb        as des_encrypt_ecb,
+    decrypt_ecb        as des_decrypt_ecb,
+    encrypt_cbc        as des_encrypt_cbc,
+    decrypt_cbc        as des_decrypt_cbc,
+    triple_des_encrypt_ecb as triple_des_encrypt_ecb,
+    triple_des_decrypt_ecb as triple_des_decrypt_ecb,
+    triple_des_encrypt_cbc as triple_des_encrypt_cbc,
+    triple_des_decrypt_cbc as triple_des_decrypt_cbc,
+)
+
+# Playfair
+from algorithms.symmetric.playfair import (
+    encrypt as playfair_encrypt,
+    decrypt as playfair_decrypt,
+)
+
+# RC4
+from algorithms.symmetric.rc4 import (
+    encrypt as rc4_encrypt,
+    decrypt as rc4_decrypt,
+)
+
+# Vigenère
+from algorithms.symmetric.vigenere import (
+    encrypt as vigenere_encrypt,
+    decrypt as vigenere_decrypt,
+)
+
+from algorithms.hashing.MD4 import md4
+
+
 
 load_dotenv()
 app = Flask(__name__)
 
-# inject current_year into every template
 @app.context_processor
 def inject_current_year():
     return {"current_year": datetime.utcnow().year}
@@ -26,6 +82,7 @@ ALGOS = {
     { "key": "AES_256",  "label": "AES 256" },
     { "key": "caesar",   "label": "Caesar Cipher" },
     { "key": "ChaCha20", "label": "ChaCha20" },
+    { "key": "XChaCha20", "label": "XChaCha20" },
     { "key": "columnar","label": "Columnar Transposition" },
     { "key": "DES",      "label": "DES" },
     { "key": "3DES",     "label": "3DES" },
@@ -73,9 +130,9 @@ ALGO_PARAMS = {
     {"name":"padding",    "type":"select",   "label":"Padding",
      "options":["PKCS7"],   "required":True},
     {"name":"iv",         "type":"text",     "label":"IV (optional  , in ASCII)",
-     "required":False, "placeholder":"16 ASCII chars or leave blank"},
+     "required":False, "placeholder":"16 ASCII chars or leave blank","show_when_mode": ["CBC","CTR"]},
     {"name":"key",        "type":"text",     "label":"Secret Key (16-byte ASCII)",
-     "required":True,  "placeholder":"Exactly 16 chars"}
+     "required":True,  "placeholder":"Exactly 16 chars" , "minlength" : 16 , "maxlength" : 16 , "pattern" : ".{16}", "title"  : "Key must be exactly 16 characters long"}
   ],
   "AES_192": [
     {"name":"action",     "type":"select",   "label":"Action",
@@ -89,7 +146,7 @@ ALGO_PARAMS = {
     {"name":"padding",    "type":"select",   "label":"Padding",
      "options":["PKCS7"],   "required":True},
     {"name":"iv",         "type":"text",     "label":"IV (optional  , in ASCII)",
-     "required":False, "placeholder":"16 ASCII chars or leave blank"},
+     "required":False, "placeholder":"16 ASCII chars or leave blank" , "show_when_mode": ["CBC","CTR"]},
     {"name":"key",        "type":"text",     "label":"Secret Key (24-byte ASCII)",
      "required":True,  "placeholder":"Exactly 24 chars"}
   ],
@@ -105,7 +162,7 @@ ALGO_PARAMS = {
     {"name":"padding",    "type":"select",   "label":"Padding",
      "options":["PKCS7"],   "required":True},
     {"name":"iv",         "type":"text",     "label":"IV (optional  , in ASCII)",
-     "required":False, "placeholder":"16 ASCII chars or leave blank"},
+     "required":False, "placeholder":"16 ASCII chars or leave blank" , "show_when_mode": ["CBC","CTR"]},
     {"name":"key",        "type":"text",     "label":"Secret Key (32-byte ASCII)",
      "required":True,  "placeholder":"Exactly 32 chars"}
   ],
@@ -221,14 +278,69 @@ ALGO_PARAMS = {
             "type":     "text",
             "label":    "Key (ASCII, up to 32 chars)",
             "required": True,
-            "placeholder": "32-byte key (will be zero-padded/truncated)"
+            "placeholder": "32-byte key (will be zero-padded/truncated)",
+            "minlength" : 32 , "maxlength" : 32 , "pattern" : ".{32}", "title"  : "Key must be exactly 32 characters long"
+
         },
         {
             "name":     "nonce",
             "type":     "text",
             "label":    "Nonce (ASCII, up to 12 chars)",
             "required": True,
-            "placeholder": "12-byte nonce (will be zero-padded/truncated)"
+            "placeholder": "12-byte nonce " , 
+            "minlength" : 12 , "maxlength" : 12 , "pattern" : ".{12}", "title"  : "Nonce must be exactly 12 characters long"
+        },
+        {
+            "name":      "initial_counter",
+            "type":      "number",
+            "label":     "Initial Counter",
+            "placeholder": " equals 1 by default" , 
+            "required":  False,
+            "value":     1,
+            "min":       0
+        }
+    ],
+    "XChaCha20": [
+        # 1) Encrypt vs. Decrypt toggle
+        {
+            "name":     "action",
+            "type":     "select",
+            "label":    "Action",
+            "options":  ["Encrypt", "Decrypt"],
+            "required": True
+        },
+        # 2a) Plaintext for encryption
+        {
+            "name":      "plaintext",
+            "type":      "textarea",
+            "label":     "Plaintext (UTF-8)",
+            "required":  True,
+            "show_when": "Encrypt"
+        },
+        # 2b) Ciphertext for decryption
+        {
+            "name":      "ciphertext",
+            "type":      "textarea",
+            "label":     "Ciphertext (hex)",
+            "required":  True,
+            "show_when": "Decrypt"
+        },
+        # 3) Shared parameters
+        {
+            "name":     "key",
+            "type":     "text",
+            "label":    "Key (ASCII, up to 32 chars)",
+            "required": True,
+            "placeholder": "32-byte key ",
+            "minlength" : 32 , "maxlength" : 32 , "pattern" : ".{32}", "title"  : "Key must be exactly 32 characters long"
+        },
+        {
+            "name":     "nonce",
+            "type":     "text",
+            "label":    "Nonce (ASCII, up to 12 chars)",
+            "required": True,
+            "placeholder": "12-byte nonce (will be zero-padded/truncated)", 
+            "minlength" : 16 , "maxlength" : 16 , "pattern" : ".{16}", "title"  : "Nonce must be exactly 16 characters long"
         },
         {
             "name":      "initial_counter",
@@ -323,7 +435,7 @@ ALGO_PARAMS = {
         {
             "name":        "iv",
             "type":        "text",
-            "label":       "IV (16-hex digits, only for CBC)",
+            "label":       "IV (utf-8)",
             "required":    False,
             "placeholder": "e.g. 0123456789ABCDEF"
         }
@@ -601,7 +713,8 @@ ALGO_PARAMS = {
       "type":        "text",
       "label":       "One-time Key (ASCII, 32 bytes)",
       "required":    True,
-      "placeholder": "Enter exactly 32 ASCII characters"
+      "placeholder": "Enter exactly 32 ASCII characters" , 
+      "minlength" : 32 , "maxlength" : 32 , "pattern" : ".{32}", "title"  : "Key must be exactly 32 characters long"
     },
     {
       "name":        "aad",
@@ -683,7 +796,7 @@ def run_algorithm(category, algo, **kwargs):
     """
     Dispatch to the right implementation based on algo, mode & action.
     """
-    # AES-128, 192, 256 all use the same AES_* functions:
+    
     if algo in ("AES_128","AES_192","AES_256"):
         action = kwargs.pop("action")            # "Encrypt" or "Decrypt"
         mode   = kwargs.pop("mode")              # "ECB", "CBC" or "CTR"
@@ -706,8 +819,129 @@ def run_algorithm(category, algo, **kwargs):
                 return decrypt_cbc(ct, key, iv)
             else:
                 return decrypt_ctr(ct, key, iv)
+    elif algo == "caesar":
+        action = kwargs.pop("action")   # "Encrypt" or "Decrypt"
+        # pop shift and convert to integer
+        shift  = int(kwargs.pop("shift"))
 
-    # … add other algorithms here …
+        if action == "Encrypt":
+            pt = kwargs.pop("plaintext")
+            return caesar_encrypt(pt, shift)
+        else:  # Decrypt
+            ct = kwargs.pop("ciphertext")
+            return caesar_decrypt(ct, shift)
+    elif algo == "ChaCha20":
+        # pop the shared params
+        action           = kwargs.pop("action")            # "Encrypt" or "Decrypt"
+        key_str          = kwargs.pop("key")               # ASCII key
+        nonce_str        = kwargs.pop("nonce")             # ASCII nonce
+        # initial_counter may be missing → default to 1
+        initial_counter  = int(kwargs.pop("initial_counter", 1))
+
+        if action == "Encrypt":
+            plaintext = kwargs.pop("plaintext")
+            return chacha20_encrypt(plaintext, key_str, nonce_str, initial_counter)
+        else:
+            ciphertext = kwargs.pop("ciphertext")
+            return chacha20_decrypt(ciphertext, key_str, nonce_str, initial_counter)
+
+    elif algo == "XChaCha20":
+        # same pattern for the 24-byte variant
+        action           = kwargs.pop("action")
+        key_str          = kwargs.pop("key")
+        nonce_str        = kwargs.pop("nonce")
+        initial_counter  = int(kwargs.pop("initial_counter", 1))
+
+        if action == "Encrypt":
+            plaintext = kwargs.pop("plaintext")
+            return xchacha20_encrypt(plaintext, key_str, nonce_str, initial_counter)
+        else:
+            ciphertext = kwargs.pop("ciphertext")
+            return xchacha20_decrypt(ciphertext, key_str, nonce_str, initial_counter)
+    elif algo == "columnar":
+        action = kwargs.pop("action")             # "Encrypt" or "Decrypt"
+        key    = kwargs.pop("key")                # your columnar keyword
+        # pad is optional—default to '_' if not supplied
+        pad    = kwargs.pop("pad", "_") or "_"
+
+        if action == "Encrypt":
+            plaintext = kwargs.pop("plaintext")
+            return columnar_encrypt(plaintext, key, pad)
+        else:
+            ciphertext = kwargs.pop("ciphertext")
+            return columnar_decrypt(ciphertext, key, pad)
+        # ─── DES (single‐DES) ────────────────────────────────────────────────────────
+    elif algo == "DES":
+        action = kwargs.pop("action")      # "Encrypt" or "Decrypt"
+        mode   = kwargs.pop("mode")        # "ECB" or "CBC"
+        key    = kwargs.pop("key")         # ASCII 8-byte key
+        iv     = kwargs.pop("iv", "")      # hex-IV for CBC, or blank
+
+        if action == "Encrypt":
+            pt = kwargs.pop("plaintext")
+            if mode == "ECB":
+                return des_encrypt_ecb(pt, key)
+            else:  # CBC
+                return des_encrypt_cbc(pt, key, iv)
+        else:  # Decrypt
+            ct = kwargs.pop("ciphertext")
+            if mode == "ECB":
+                return des_decrypt_ecb(ct, key)
+            else:
+                return des_decrypt_cbc(ct, key, iv)
+
+    # ─── 3DES (Triple DES) ──────────────────────────────────────────────────────
+    elif algo == "3DES":
+        action = kwargs.pop("action")
+        mode   = kwargs.pop("mode")
+        key    = kwargs.pop("key")         # ASCII 24-byte key
+        iv     = kwargs.pop("iv", "")      # hex-IV for CBC, or blank
+
+        if action == "Encrypt":
+            pt = kwargs.pop("plaintext")
+            if mode == "ECB":
+                return triple_des_decrypt_ecb(pt, key)
+            else:  # CBC
+                return triple_des_encrypt_cbc(pt, key, iv)
+        else:
+            ct = kwargs.pop("ciphertext")
+            if mode == "ECB":
+                return triple_des_decrypt_ecb(ct, key)
+            else:
+                return triple_des_decrypt_cbc(ct, key, iv)
+    elif algo == "playfair":
+        action = kwargs.pop("action")    # "Encrypt" or "Decrypt"
+        key    = kwargs.pop("key")       # your keyword
+        if action == "Encrypt":
+            pt = kwargs.pop("plaintext")
+            return playfair_encrypt(pt, key)
+        else:
+            ct = kwargs.pop("ciphertext")
+            return playfair_decrypt(ct, key)
+    elif algo == "rc4":
+        action = kwargs.pop("action")      # “Encrypt” or “Decrypt”
+        key    = kwargs.pop("key")         # ASCII key
+        if action == "Encrypt":
+            pt = kwargs.pop("plaintext")
+            return rc4_encrypt(pt, key)
+        else:
+            ct = kwargs.pop("ciphertext")
+            return rc4_decrypt(ct, key)
+    elif algo == "vigenere":
+        action   = kwargs.pop("action")       # "Encrypt" or "Decrypt"
+        key      = kwargs.pop("key")          # keyword (letters only)
+        alphabet = kwargs.pop("alphabet")     # custom alphabet
+        if action == "Encrypt":
+            pt = kwargs.pop("plaintext")
+            return vigenere_encrypt(pt, key, alphabet)
+        else:
+            ct = kwargs.pop("ciphertext")
+            return vigenere_decrypt(ct, key, alphabet)
+
+
+            
+
+    
 
   
 

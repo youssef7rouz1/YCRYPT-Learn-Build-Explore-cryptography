@@ -59,6 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
         wrapper.style.display = "none";
         wrapper.dataset.showWhen = s.show_when;
       }
+       if (s.show_when_mode) {
+      wrapper.style.display = "none";
+      wrapper.dataset.showWhenMode = s.show_when_mode.join(",");
+    }
 
       // label
       if (s.label) {
@@ -89,9 +93,9 @@ document.addEventListener("DOMContentLoaded", () => {
         input = document.createElement("input");
         input.type = s.type;
         input.className = "form-control";
-        if (s.min != null)   input.min         = s.min;
-        if (s.max != null)   input.max         = s.max;
-        if (s.value != null) input.value       = s.value;
+        if (s.min != null)   input.min   = s.min;
+        if (s.max != null)   input.max   = s.max;
+        if (s.value != null) input.value = s.value;
       }
 
       // common attrs
@@ -99,6 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
       input.name = s.name;
       if (s.required)    input.required    = true;
       if (s.placeholder) input.placeholder = s.placeholder;
+      if (s.minlength  != null) input.minLength = s.minlength;
+      if (s.maxlength  != null) input.maxLength = s.maxlength;
+      if (s.pattern    != null) input.pattern   = s.pattern;
+      if (s.title      != null) input.title     = s.title;
 
       wrapper.append(input);
       paramFields.append(wrapper);
@@ -110,14 +118,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // if we have an action select, wire up show_when logic
     if (actionSelect) {
-      actionSelect.addEventListener("change", e => {
-        const val = e.target.value;
-        paramFields.querySelectorAll("div[data-show-when]").forEach(w => {
-          w.style.display = (w.dataset.showWhen === val) ? "block" : "none";
+      const modeSelect = paramFields.querySelector("select[name=mode]");
+    if (modeSelect) {
+      const updateShowWhenMode = () => {
+        const m = modeSelect.value;
+        paramFields.querySelectorAll("div[data-show-when-mode]").forEach(w => {
+          w.style.display = w.dataset.showWhenMode.split(",").includes(m)
+                           ? "block"
+                           : "none";
         });
+      };
+      modeSelect.addEventListener("change", updateShowWhenMode);
+      updateShowWhenMode();
+    }
+      // remember each field’s original required flag
+      paramFields.querySelectorAll("div[data-show-when]").forEach(wrapper => {
+        const inp = wrapper.querySelector("input,textarea,select");
+        wrapper.dataset.origReq = inp.required;
       });
-      // trigger once to hide everything except action
-      actionSelect.dispatchEvent(new Event("change"));
+
+      const updateShowWhen = () => {
+        const val = actionSelect.value;
+        paramFields.querySelectorAll("div[data-show-when]").forEach(wrapper => {
+          const show = (wrapper.dataset.showWhen === val);
+          wrapper.style.display = show ? "block" : "none";
+          const inp = wrapper.querySelector("input,textarea,select");
+          // only re-apply required if it was originally required
+          inp.required = show && (wrapper.dataset.origReq === "true");
+        });
+      };
+
+      actionSelect.addEventListener("change", updateShowWhen);
+      updateShowWhen();  // initialize visibility & required flags
     }
   });
 
@@ -138,3 +170,4 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(console.error);
   });
 });
+
