@@ -1,7 +1,5 @@
-"""
-Playfair cipher implementation with correct encryption and decryption logic.
 
-Features:
+"""
 - Maps 'J'→'I', preserves spaces.
 - Pads repeated letters with 'X' (or final letter if odd length) on encrypt.
 """

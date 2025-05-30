@@ -1,5 +1,5 @@
 """
-Vigenre
+Vigenere
 Functions:
 - encrypt(plaintext: str, key: str , alphabet : str) -> str
 - decrypt(ciphertext: str, key: str , alphabet : str) -> str
@@ -13,8 +13,7 @@ from typing import List , Tuple
 def generate_vigenere_table(alphabet : str) -> list[list[str]]:
     """
     Generates the vigenere table given a set of letters (alphabet)
-    :param alphabet: set of letters used.
-    :return: Encrypted vigenere table.
+    
     """
     n = len(alphabet)
     table: list[list[str]] = []
@@ -29,9 +28,7 @@ def generate_vigenere_table(alphabet : str) -> list[list[str]]:
 def generate_full_key(key  : str ,length : int ) -> str :
     """
     Generates the full key given the keyword
-    :param key: keword used.
-    :param length: total length of the final key generated.
-    :return: final key .
+    
     """
     result=[]
     input=key.replace(" " , "")     #ignore all spaces in the keyword
@@ -46,8 +43,7 @@ def store_space_positions(text : str) -> list:
     """
     Stores the spaces positions in a given string .
     Used in vigenere cipher since we clean the texts by removing the spaces .
-    :param text: text to manipulate
-    :return: list of spaces' postions .
+    
     """
     result=[]
     for i in range(len(text)):
@@ -62,10 +58,7 @@ def store_space_positions(text : str) -> list:
 def encrypt(plaintext: str, key: str , alphabet : str) -> str:
     """
     Encrypts plaintext using Vigenere cipher.
-    :param plaintext: Input text to encrypt.
-    :param key: keword used for encryption.
-    :param alphabet: the alphabet used to generate the Vigenere table.
-    :return: Encrypted ciphertext.
+    
     """
     result=[] # vaariable ti store the result of encryption
     space_positions=store_space_positions(plaintext) #stores the spaces' positions to add them later in the cipher
@@ -94,10 +87,7 @@ def encrypt(plaintext: str, key: str , alphabet : str) -> str:
 def decrypt(ciphertext: str, key: str , alphabet : str ) -> str:
     """
     Decrypts ciphertext using Vigenere cipher.
-    :param ciphertext: Input text to decrypt.
-    :param key: keword used for encryption/decryption.
-    :param alphabet: the alphabet used to generate the Vigenere table.
-    :return: Decrypted plaintext.
+    
     """
     result=[]
     space_positions=store_space_positions(ciphertext)

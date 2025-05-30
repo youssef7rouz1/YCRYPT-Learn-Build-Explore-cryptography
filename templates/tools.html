@@ -1,8 +1,155 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Other Useful Tools</h1>
-  <ul>
-    <li><a href="https://www.dcode.fr/">dCode.fr</a> — general cipher utilities</li>
-    <li><a href="https://cryptii.com/">Cryptii</a> — interactive crypto playground</li>
-  </ul>
+<div class="container py-5">
+  <div class="row gy-4">
+
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title mb-3">Quick Converter</h2>
+          <form id="convert-form">
+            <div class="mb-3">
+              <label for="input-text" class="form-label">Input</label>
+              <textarea id="input-text" class="form-control" rows="3"
+                        placeholder="Paste your data…"></textarea>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label for="input-format" class="form-label">Input Format</label>
+                <select id="input-format" class="form-select">
+                  <option value="utf8">UTF-8</option>
+                  <option value="hex">Hex</option>
+                  <option value="base64">Base64</option>
+                  <option value="bits">Bits</option>
+                  <option value="bytes">Bytes</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="output-format" class="form-label">Output Format</label>
+                <select id="output-format" class="form-select">
+                  <option value="utf8">UTF-8</option>
+                  <option value="hex">Hex</option>
+                  <option value="base64">Base64</option>
+                  <option value="bits">Bits</option>
+                  <option value="bytes">Bytes</option>
+                </select>
+              </div>
+            </div>
+            <button id="convert-btn" type="button" class="btn btn-primary">
+              Convert
+            </button>
+          </form>
+          <div class="mt-3">
+            <label for="output-text" class="form-label">Output</label>
+            <textarea id="output-text" class="form-control" rows="3" readonly
+                      placeholder="Result…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title mb-3">Random Key Generator</h2>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label for="key-length" class="form-label">Key Length</label>
+              <select id="key-length" class="form-select">
+                <option value="8">8 bytes</option>
+                <option value="16" selected>16 bytes (AES-128)</option>
+                <option value="24">24 bytes (AES-192)</option>
+                <option value="32">32 bytes (AES-256 / ChaCha20)</option>
+                <option value="64">64 bytes</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button id="gen-key-btn" class="btn btn-success w-100">
+                Generate Key
+              </button>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label for="key-output" class="form-label">Generated Key</label>
+            <textarea id="key-output" class="form-control" rows="2" readonly
+                      placeholder="Your random key…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// --- Quick Converter Logic ---
+document.getElementById('convert-btn').addEventListener('click', () => {
+  const input    = document.getElementById('input-text').value.trim();
+  const inFmt    = document.getElementById('input-format').value;
+  const outFmt   = document.getElementById('output-format').value;
+  let bytes;
+
+  try {
+    switch (inFmt) {
+      case 'utf8':
+        bytes = new TextEncoder().encode(input);
+        break;
+      case 'hex':
+        bytes = new Uint8Array(input.match(/.{1,2}/g).map(b=>parseInt(b,16)));
+        break;
+      case 'base64': {
+        const str = atob(input);
+        bytes = Uint8Array.from(str, c=>c.charCodeAt(0));
+        break;
+      }
+      case 'bits':
+        bytes = new Uint8Array(input.match(/.{1,8}/g).map(b=>parseInt(b,2)));
+        break;
+      case 'bytes':
+        bytes = new Uint8Array(input.split(',').map(n=>parseInt(n,10)));
+        break;
+      default:
+        throw new Error('Unknown input format');
+    }
+
+    let out;
+    switch (outFmt) {
+      case 'utf8':
+        out = new TextDecoder().decode(bytes);
+        break;
+      case 'hex':
+        out = [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+        break;
+      case 'base64':
+        out = btoa(String.fromCharCode(...bytes));
+        break;
+      case 'bits':
+        out = [...bytes].map(b=>b.toString(2).padStart(8,'0')).join('');
+        break;
+      case 'bytes':
+        out = [...bytes].join(',');
+        break;
+      default:
+        throw new Error('Unknown output format');
+    }
+
+    document.getElementById('output-text').value = out;
+  } catch (e) {
+    document.getElementById('output-text').value = 'Error: ' + e.message;
+  }
+});
+
+document.getElementById('gen-key-btn').addEventListener('click', () => {
+  const length = parseInt(document.getElementById('key-length').value, 10);
+  const array = new Uint8Array(length);
+  window.crypto.getRandomValues(array);
+
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let key = '';
+  for (let b of array) {
+    key += chars[b % chars.length];
+  }
+  document.getElementById('key-output').value = key;
+});
+</script>
 {% endblock %}

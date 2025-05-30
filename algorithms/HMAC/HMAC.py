@@ -16,14 +16,14 @@ _BLOCK_SIZES: Dict[str, int] = {
     # MD / SHA-1 / SHA-2 families
     "MD4": 64,
     "MD5": 64,
-    "SHA-1": 64,
-    "SHA-256": 64,
-    "SHA-512": 128,
-    # SHA-3 (Keccak rates)
-    "SHA3-224": 144,
-    "SHA3-256": 136,
-    "SHA3-384": 104,
-    "SHA3-512": 72,
+    "SHA_1": 64,
+    "SHA_256": 64,
+    "SHA_512": 128,
+    # SHA-3 
+    "SHA3_224": 144,
+    "SHA3_256": 136,
+    "SHA3_384": 104,
+    "SHA3_512": 72,
 }
 
 
@@ -34,9 +34,6 @@ def _get_block_size(name: str) -> int:
     except KeyError:
         raise ValueError(f"Unknown hash algorithm {name!r}")
 
-# utils/useful_functions.py
-# -------------------------
-
 # --------------------------------------------------------------------------- #
 def _hash_bytes(data: bytes, name: str) -> bytes:
    
@@ -45,7 +42,7 @@ def _hash_bytes(data: bytes, name: str) -> bytes:
         raise ValueError(f"Unknown hash algorithm {name!r}")
 
     hex_digest = hfn(data.decode("latin-1"))
-    return hex_to_bytes(hex_digest)          # hex-str ➜ raw bytes
+    return hex_to_bytes(hex_digest)          
 
 
 # --------------------------------------------------------------------------- #
@@ -55,9 +52,9 @@ def _prepare_key(key: str, name: str) -> bytes:
     k = utf8_to_bytes(key)
 
     if len(k) > block:
-        k = _hash_bytes(k, name)             # shorten to digest length
+        k = _hash_bytes(k, name)             
 
-    return k.ljust(block, b"\x00")           # K0
+    return k.ljust(block, b"\x00")           
 
 
 # --------------------------------------------------------------------------- #

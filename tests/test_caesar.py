@@ -1,7 +1,7 @@
 import pytest
 from algorithms.symmetric.caesar import encrypt, decrypt
 
-@pytest.mark.parametrize("plaintext,shift,expected", [
+@pytest.mark.parametrize("plaintext, shift, expected", [
     ("abc", 3, "def"),
     ("xyz", 2, "zab"),
     ("Hello, World!", 5, "Mjqqt, Btwqi!"),
@@ -11,7 +11,7 @@ from algorithms.symmetric.caesar import encrypt, decrypt
 def test_encrypt(plaintext, shift, expected):
     assert encrypt(plaintext, shift) == expected
 
-@pytest.mark.parametrize("ciphertext,shift,expected", [
+@pytest.mark.parametrize("ciphertext, shift, expected", [
     ("def", 3, "abc"),
     ("zab", 2, "xyz"),
     ("Mjqqt, Btwqi!", 5, "Hello, World!"),

@@ -1,26 +1,23 @@
-
 import pytest
 import random
 import string
 from Crypto.Hash import SHA1
-from algorithms.hashing.SHA1 import sha1 
+from algorithms.hashing.SHA1 import sha1
 
 def random_text(max_length: int = 256) -> str:
-    """
-    Generate a random text string (printable ASCII + whitespace) of length up to max_length.
-    """
+    # Create a random string of printable characters up to the given length
     length = random.randint(0, max_length)
     return ''.join(random.choice(string.printable) for _ in range(length))
 
 @pytest.mark.parametrize("i", range(20))
-def test_sha1_random_printable(i):
- 
-    text = random_text(256)
+def test_sha1_random(i):
+    # Compare our SHA1 implementation against PyCryptodome on random input
+    text = random_text()
     expected = SHA1.new(text.encode("utf-8")).hexdigest().upper()
     assert sha1(text) == expected
 
 @pytest.mark.parametrize("text", [
-    "",                    # empty
+    "",
     "a",
     "abc",
     "message digest",
@@ -28,12 +25,9 @@ def test_sha1_random_printable(i):
     string.ascii_uppercase,
     string.digits,
     string.punctuation,
- 
-    "a" * 1000,            # long repetition
+    "a" * 1000,
 ])
-def test_sha1_various_known(text):
-    """
-    Test a variety of fixed and special strings.
-    """
+def test_sha1_known_strings(text):
+    # Verify SHA1 output on a variety of fixed inputs
     expected = SHA1.new(text.encode("utf-8")).hexdigest().upper()
     assert sha1(text) == expected

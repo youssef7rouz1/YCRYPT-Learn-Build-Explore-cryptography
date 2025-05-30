@@ -1,4 +1,3 @@
-# tests/test_des_highlevel.py
 
 import pytest
 import random

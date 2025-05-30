@@ -1,4 +1,3 @@
-# tests/test_aes_random.py
 import os
 import pytest
 import random
@@ -14,22 +13,19 @@ from algorithms.symmetric.AES import (
     encrypt_ctr, decrypt_ctr
 )
 
-
 def random_key_str(length: int) -> str:
-    """Generate a random key string of given byte length."""
-    return ''.join(random.choice(string.printable.strip()) for _ in range(length))
-
+    """Return a random ASCII string of the specified byte length."""
+    chars = string.printable.strip()
+    return ''.join(random.choice(chars) for _ in range(length))
 
 def random_iv_bytes() -> bytes:
-    """Generate a random IV of BLOCK_SIZE bytes."""
+    """Return a random IV of BLOCK_SIZE bytes."""
     return os.urandom(BLOCK_SIZE)
 
-
 def random_plaintext() -> str:
-    """Generate random printable plaintext up to 64 chars."""
+    """Return a random printable string up to 64 characters."""
     length = random.randint(0, 64)
     return ''.join(random.choice(string.printable) for _ in range(length))
-
 
 @pytest.mark.parametrize("key_len", [16, 24, 32])
 @pytest.mark.parametrize("i", range(40))
@@ -37,16 +33,17 @@ def test_ecb_random(key_len, i):
     key = random_key_str(key_len)
     pt_bytes = random_plaintext().encode('utf-8')
 
-    # PyCryptodome ECB
+    # Reference ECB encryption from PyCryptodome
     cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
     expected_ct = cipher.encrypt(pad(pt_bytes, BLOCK_SIZE)).hex()
 
-    # our implementation
+    # Our implementation
     ct_hex = encrypt_ecb(pt_bytes.decode('utf-8', errors='ignore'), key)
     assert ct_hex == expected_ct
-    # decrypt back
-    assert decrypt_ecb(expected_ct, key) == pt_bytes.decode('utf-8', errors='ignore')
 
+    # Decrypt back and compare
+    decrypted = decrypt_ecb(expected_ct, key)
+    assert decrypted == pt_bytes.decode('utf-8', errors='ignore')
 
 @pytest.mark.parametrize("key_len", [16, 24, 32])
 @pytest.mark.parametrize("i", range(40))
@@ -56,15 +53,17 @@ def test_cbc_random(key_len, i):
     iv_hex = iv.hex()
     pt_bytes = random_plaintext().encode('utf-8')
 
-    # PyCryptodome CBC
+    # Reference CBC encryption from PyCryptodome
     cipher = AES.new(key.encode('utf-8'), AES.MODE_CBC, iv)
     expected_ct = cipher.encrypt(pad(pt_bytes, BLOCK_SIZE)).hex()
 
-    # our implementation
+    # Our implementation
     ct_hex = encrypt_cbc(pt_bytes.decode('utf-8', errors='ignore'), key, iv_hex)
     assert ct_hex == expected_ct
-    assert decrypt_cbc(expected_ct, key, iv_hex) == pt_bytes.decode('utf-8', errors='ignore')
 
+    # Decrypt back and compare
+    decrypted = decrypt_cbc(expected_ct, key, iv_hex)
+    assert decrypted == pt_bytes.decode('utf-8', errors='ignore')
 
 @pytest.mark.parametrize("key_len", [16, 24, 32])
 @pytest.mark.parametrize("i", range(40))
@@ -77,11 +76,14 @@ def test_ctr_random(key_len, i):
     pt_str = random_plaintext()
     pt_bytes = pt_str.encode('utf-8')
 
-    # PyCryptodome CTR
+    # Reference CTR encryption from PyCryptodome
     cipher = AES.new(key.encode('utf-8'), AES.MODE_CTR, counter=ctr)
     expected_ct = cipher.encrypt(pt_bytes).hex()
 
-    # our implementation
+    # Our implementation
     ct_hex = encrypt_ctr(pt_str, key, iv.hex())
     assert ct_hex == expected_ct
-    assert decrypt_ctr(expected_ct, key, iv.hex()) == pt_str
+
+    # Decrypt back and compare
+    decrypted = decrypt_ctr(expected_ct, key, iv.hex())
+    assert decrypted == pt_str

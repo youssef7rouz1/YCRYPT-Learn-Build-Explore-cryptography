@@ -11,40 +11,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const toastEl     = document.getElementById("copy-toast");
   const copyToast   = new bootstrap.Toast(toastEl);
 
-  // 1. Tooltips
+  // Enable Bootstrap tooltips
   document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
     new bootstrap.Tooltip(el);
   });
 
-  // 2. Theme Toggle
-  const stored = localStorage.getItem("theme") || "light";
-  htmlEl.setAttribute("data-theme", stored);
-  updateIcon(stored);
+  // Initialize theme from localStorage and set up toggle button
+  const storedTheme = localStorage.getItem("theme") || "light";
+  htmlEl.setAttribute("data-theme", storedTheme);
+  updateIcon(storedTheme);
   themeBtn.addEventListener("click", () => {
-    const next = htmlEl.getAttribute("data-theme") === "light" ? "dark" : "light";
-    htmlEl.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
-    updateIcon(next);
+    const newTheme = htmlEl.getAttribute("data-theme") === "light" ? "dark" : "light";
+    htmlEl.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    updateIcon(newTheme);
   });
+
   function updateIcon(theme) {
+    // Switch between moon and sun icon
     themeIcon.className = theme === "light" ? "bi bi-moon-fill" : "bi bi-sun-fill";
   }
 
-  // 3. Category → Algorithm
+  // When the user selects a category, load its algorithms
   catSelect.addEventListener("change", () => {
-    algoSelect.innerHTML = `<option value="" disabled selected>Select algo…</option>`;
+    algoSelect.innerHTML = `<option value="" disabled selected>Select algorithm…</option>`;
     paramFields.innerHTML = "";
     outputPre.textContent = "";
     runBtn.disabled = false;
 
     (ALGOS[catSelect.value] || []).forEach(({key, label}) => {
-      const o = document.createElement("option");
-      o.value = key; o.textContent = label;
-      algoSelect.append(o);
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = label;
+      algoSelect.append(option);
     });
   });
 
-  // 4. Algorithm → Params (with Encrypt/Decrypt toggling)
+  // When the user picks an algorithm, render its input fields
   algoSelect.addEventListener("change", () => {
     paramFields.innerHTML = "";
     outputPre.textContent = "";
@@ -52,108 +55,105 @@ document.addEventListener("DOMContentLoaded", () => {
     const specs = ALGO_PARAMS[algoSelect.value] || [];
     let actionSelect = null;
 
-    specs.forEach(s => {
+    specs.forEach(spec => {
       const wrapper = document.createElement("div");
       wrapper.className = "mb-3";
-      if (s.show_when) {
+
+      if (spec.show_when) {
         wrapper.style.display = "none";
-        wrapper.dataset.showWhen = s.show_when;
+        wrapper.dataset.showWhen = spec.show_when;
       }
-       if (s.show_when_mode) {
-      wrapper.style.display = "none";
-      wrapper.dataset.showWhenMode = s.show_when_mode.join(",");
-    }
-
-      // label
-      if (s.label) {
-        const lbl = document.createElement("label");
-        lbl.htmlFor = s.name;
-        lbl.className = "form-label";
-        lbl.textContent = s.label;
-        wrapper.append(lbl);
+      if (spec.show_when_mode) {
+        wrapper.style.display = "none";
+        wrapper.dataset.showWhenMode = spec.show_when_mode.join(",");
       }
 
-      // input/select/textarea
+      // Field label
+      if (spec.label) {
+        const label = document.createElement("label");
+        label.htmlFor = spec.name;
+        label.className = "form-label";
+        label.textContent = spec.label;
+        wrapper.append(label);
+      }
+
+      // Build input element
       let input;
-      if (s.type === "textarea") {
+      if (spec.type === "textarea") {
         input = document.createElement("textarea");
         input.className = "form-control";
-        input.rows = s.rows || 3;
-      }
-      else if (s.type === "select") {
+        input.rows = spec.rows || 3;
+      } else if (spec.type === "select") {
         input = document.createElement("select");
         input.className = "form-select";
-        s.options.forEach(opt => {
+        spec.options.forEach(opt => {
           const o = document.createElement("option");
           o.value = o.textContent = opt;
           input.append(o);
         });
-      }
-      else {
+      } else {
         input = document.createElement("input");
-        input.type = s.type;
+        input.type = spec.type;
         input.className = "form-control";
-        if (s.min != null)   input.min   = s.min;
-        if (s.max != null)   input.max   = s.max;
-        if (s.value != null) input.value = s.value;
+        if (spec.min != null)   input.min       = spec.min;
+        if (spec.max != null)   input.max       = spec.max;
+        if (spec.value != null) input.value     = spec.value;
       }
 
-      // common attrs
-      input.id = s.name;
-      input.name = s.name;
-      if (s.required)    input.required    = true;
-      if (s.placeholder) input.placeholder = s.placeholder;
-      if (s.minlength  != null) input.minLength = s.minlength;
-      if (s.maxlength  != null) input.maxLength = s.maxlength;
-      if (s.pattern    != null) input.pattern   = s.pattern;
-      if (s.title      != null) input.title     = s.title;
+      // Common attributes
+      input.id = spec.name;
+      input.name = spec.name;
+      if (spec.required)    input.required    = true;
+      if (spec.placeholder) input.placeholder = spec.placeholder;
+      if (spec.minlength != null) input.minLength = spec.minlength;
+      if (spec.maxlength != null) input.maxLength = spec.maxlength;
+      if (spec.pattern    != null) input.pattern   = spec.pattern;
+      if (spec.title      != null) input.title     = spec.title;
 
       wrapper.append(input);
       paramFields.append(wrapper);
 
-      if (s.name === "action") {
+      if (spec.name === "action") {
         actionSelect = input;
       }
     });
 
-    // if we have an action select, wire up show_when logic
+    // Handle conditional fields based on action or mode
     if (actionSelect) {
       const modeSelect = paramFields.querySelector("select[name=mode]");
-    if (modeSelect) {
-      const updateShowWhenMode = () => {
-        const m = modeSelect.value;
-        paramFields.querySelectorAll("div[data-show-when-mode]").forEach(w => {
-          w.style.display = w.dataset.showWhenMode.split(",").includes(m)
-                           ? "block"
-                           : "none";
-        });
-      };
-      modeSelect.addEventListener("change", updateShowWhenMode);
-      updateShowWhenMode();
-    }
-      // remember each field’s original required flag
-      paramFields.querySelectorAll("div[data-show-when]").forEach(wrapper => {
+      if (modeSelect) {
+        const updateModeVisibility = () => {
+          const m = modeSelect.value;
+          paramFields.querySelectorAll("[data-show-when-mode]").forEach(w => {
+            w.style.display = w.dataset.showWhenMode.split(",").includes(m) ? "block" : "none";
+          });
+        };
+        modeSelect.addEventListener("change", updateModeVisibility);
+        updateModeVisibility();
+      }
+
+      // Track original required flags
+      paramFields.querySelectorAll("[data-show-when]").forEach(wrapper => {
         const inp = wrapper.querySelector("input,textarea,select");
         wrapper.dataset.origReq = inp.required;
       });
 
-      const updateShowWhen = () => {
-        const val = actionSelect.value;
-        paramFields.querySelectorAll("div[data-show-when]").forEach(wrapper => {
-          const show = (wrapper.dataset.showWhen === val);
+      const updateActionVisibility = () => {
+        const act = actionSelect.value;
+        paramFields.querySelectorAll("[data-show-when]").forEach(wrapper => {
+          const show = wrapper.dataset.showWhen === act;
           wrapper.style.display = show ? "block" : "none";
           const inp = wrapper.querySelector("input,textarea,select");
-          // only re-apply required if it was originally required
-          inp.required = show && (wrapper.dataset.origReq === "true");
+          inp.required = show && wrapper.dataset.origReq === "true";
         });
       };
 
-      actionSelect.addEventListener("change", updateShowWhen);
-      updateShowWhen();  // initialize visibility & required flags
+      actionSelect.addEventListener("change", updateActionVisibility);
+      updateActionVisibility();
     }
   });
 
-  // 5. Show spinner on submit
+  // Show a loading spinner while form is submitting
   document.getElementById("crypto-form").addEventListener("submit", () => {
     runBtn.disabled = true;
     runBtn.innerHTML = `
@@ -161,13 +161,12 @@ document.addEventListener("DOMContentLoaded", () => {
       Processing…`;
   });
 
-  // 6. Copy output
+  // Copy the output text to clipboard
   copyBtn.addEventListener("click", () => {
-    const txt = outputPre.textContent.trim();
-    if (!txt) return;
-    navigator.clipboard.writeText(txt)
+    const text = outputPre.textContent.trim();
+    if (!text) return;
+    navigator.clipboard.writeText(text)
       .then(() => copyToast.show())
       .catch(console.error);
   });
 });
-

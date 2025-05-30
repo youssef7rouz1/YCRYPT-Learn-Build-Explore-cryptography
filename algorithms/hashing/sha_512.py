@@ -1,4 +1,3 @@
-import math
 from utils.useful_functions import (
     utf8_to_bytes,
     bytes_to_hex,

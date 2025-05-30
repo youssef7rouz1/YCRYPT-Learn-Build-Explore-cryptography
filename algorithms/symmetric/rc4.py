@@ -1,16 +1,4 @@
-"""
-RC4 stream cipher implementation.
 
-
-- encrypt(plaintext: str, key: str) -> str        # returns ciphertext as uppercase hex
-- decrypt(ciphertext_hex: str, key: str) -> str   # accepts hex, returns plaintext
-
-
-- _str_to_bytes(s: str) -> bytes
-- ksa(key_bytes: bytes) -> List[int]
-- prga(state: List[int]) -> Iterator[int]
-- generate_keystream(key_bytes: bytes, length: int) -> bytes
-"""
 from typing import Iterator, List
 from utils.useful_functions import * 
 

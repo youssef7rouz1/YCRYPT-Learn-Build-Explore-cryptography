@@ -20,11 +20,7 @@ def clamp_r(r_bytes: bytes) -> int:
     return int.from_bytes(ba, 'little')
 
 def prepare_message(aad: bytes, ciphertext: bytes) -> List[int]:
-    """
-    Pad AAD and ciphertext to 16-byte boundaries, append 64-bit lengths,
-    split into 16-byte little-endian blocks, and for each block append the
-    '1' bit (by adding 2^128).
-    """
+    
     def pad16(data: bytes) -> bytes:
         if len(data) % 16 == 0:
             return data
@@ -60,10 +56,7 @@ def poly1305_mac(r: int, s: int, blocks: List[int]) -> int:
     return tag
 
 def poly1305(key: str, aad: str, msg: str) -> bytes:
-    """
-    One-shot Poly1305: given a 32-byte one-time key, AAD, and message,
-    returns the 16-byte authentication tag.
-    """
+    
     key=utf8_to_bytes(key)
     if len(key) != 32:
         raise ValueError("Poly1305 key must be 32 bytes")
@@ -72,15 +65,5 @@ def poly1305(key: str, aad: str, msg: str) -> bytes:
     blocks = prepare_message(utf8_to_bytes(aad), utf8_to_bytes(msg))
     tag_int = poly1305_mac(r, s, blocks)
     return tag_int.to_bytes(16, 'little')
-
-# Example to test tag
-if __name__ == "__main__":
-    # RFC 7539 §2.5.2 test vector
-    key = "azertyuiazertyuiazertyuiazertyui"
-    aad = ""
-    msg = "Cryptographic Forum Research Group"
-    tag = poly1305(key, aad, msg)
-    print("Tag:", tag.hex())
-    # should print: a8061dc1305136c6c22b8baf0c0127a9
 
 

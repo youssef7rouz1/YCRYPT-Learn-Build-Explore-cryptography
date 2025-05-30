@@ -37,3 +37,19 @@ body {
 
 /* Toast above everything */
 .toast { z-index: 1200; }
+
+.dropdown-submenu {
+  position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-left: .1rem;
+  margin-right: .1rem;
+}
+
+/* Show the next level on hover */
+.dropdown-submenu:hover > .dropdown-menu {
+  display: block;
+}

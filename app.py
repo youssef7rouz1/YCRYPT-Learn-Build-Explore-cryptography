@@ -3,69 +3,43 @@ from datetime import datetime
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
 
-# AES (modes already have distinct names)
+# Symmetric ciphers
 from algorithms.symmetric.AES import (
-    encrypt_ecb,
-    decrypt_ecb,
-    encrypt_cbc,
-    decrypt_cbc,
-    encrypt_ctr,
-    decrypt_ctr,
+    encrypt_ecb, decrypt_ecb,
+    encrypt_cbc, decrypt_cbc,
+    encrypt_ctr, decrypt_ctr,
 )
-
-# Caesar
-from algorithms.symmetric.caesar import (
-    encrypt  as caesar_encrypt,
-    decrypt  as caesar_decrypt,
-)
-
-# ChaCha20 variants (their names are already unique)
+from algorithms.symmetric.caesar import encrypt as caesar_encrypt, decrypt as caesar_decrypt
 from algorithms.symmetric.ChaCha20 import (
-    chacha20_encrypt,
-    chacha20_decrypt,
-    xchacha20_encrypt  as xchacha20_encrypt,
-    xchacha20_decrypt  as xchacha20_decrypt,
+    chacha20_encrypt, chacha20_decrypt,
+    xchacha20_encrypt, xchacha20_decrypt,
 )
-
-# Columnar Transposition
-from algorithms.symmetric.columnar_transpostion import (
-    encrypt  as columnar_encrypt,
-    decrypt  as columnar_decrypt,
-)
-
-# DES & 3DES
+from algorithms.symmetric.columnar_transpostion import encrypt as columnar_encrypt, decrypt as columnar_decrypt
 from algorithms.symmetric.DES import (
-    encrypt_ecb        as des_encrypt_ecb,
-    decrypt_ecb        as des_decrypt_ecb,
-    encrypt_cbc        as des_encrypt_cbc,
-    decrypt_cbc        as des_decrypt_cbc,
-    triple_des_encrypt_ecb as triple_des_encrypt_ecb,
-    triple_des_decrypt_ecb as triple_des_decrypt_ecb,
-    triple_des_encrypt_cbc as triple_des_encrypt_cbc,
-    triple_des_decrypt_cbc as triple_des_decrypt_cbc,
+    encrypt_ecb as des_encrypt_ecb, decrypt_ecb as des_decrypt_ecb,
+    encrypt_cbc as des_encrypt_cbc, decrypt_cbc as des_decrypt_cbc,
+    triple_des_encrypt_ecb, triple_des_decrypt_ecb,
+    triple_des_encrypt_cbc, triple_des_decrypt_cbc,
 )
+from algorithms.symmetric.playfair import encrypt as playfair_encrypt, decrypt as playfair_decrypt
+from algorithms.symmetric.rc4 import encrypt as rc4_encrypt, decrypt as rc4_decrypt
+from algorithms.symmetric.vigenere import encrypt as vigenere_encrypt, decrypt as vigenere_decrypt
 
-# Playfair
-from algorithms.symmetric.playfair import (
-    encrypt as playfair_encrypt,
-    decrypt as playfair_decrypt,
-)
-
-# RC4
-from algorithms.symmetric.rc4 import (
-    encrypt as rc4_encrypt,
-    decrypt as rc4_decrypt,
-)
-
-# Vigenère
-from algorithms.symmetric.vigenere import (
-    encrypt as vigenere_encrypt,
-    decrypt as vigenere_decrypt,
-)
-
+# Hash functions
 from algorithms.hashing.MD4 import md4
+from algorithms.hashing.MD5 import md5
+from algorithms.hashing.sha_256 import sha256
+from algorithms.hashing.sha_512 import sha512
+from algorithms.hashing.SHA1 import sha1
+from algorithms.hashing.SHA3 import sha3_224, sha3_256, sha3_384, sha3_512
 
+# AEAD
+from algorithms.AEAD.AES_GCM import aes_gcm_encrypt, aes_gcm_decrypt
+from algorithms.AEAD.ChaCha20_Poly1305 import chacha20_poly1305_encrypt, chacha20_poly1305_decrypt
+from algorithms.AEAD.XChaChaPoly1305 import xchacha20_poly1305_encrypt, xchacha20_poly1305_decrypt
 
+# HMAC
+from algorithms.HMAC.HMAC import hmac
 
 load_dotenv()
 app = Flask(__name__)
@@ -74,46 +48,44 @@ app = Flask(__name__)
 def inject_current_year():
     return {"current_year": datetime.utcnow().year}
 
-# ─── Category → algos ─────────────────────────────────────────────────────────
+# Available algorithms for the UI
 ALGOS = {
-  "symmetric": [
-    { "key": "AES_128",  "label": "AES 128" },
-    { "key": "AES_192",  "label": "AES 192" },
-    { "key": "AES_256",  "label": "AES 256" },
-    { "key": "caesar",   "label": "Caesar Cipher" },
-    { "key": "ChaCha20", "label": "ChaCha20" },
-    { "key": "XChaCha20", "label": "XChaCha20" },
-    { "key": "columnar","label": "Columnar Transposition" },
-    { "key": "DES",      "label": "DES" },
-    { "key": "3DES",     "label": "3DES" },
-    { "key": "playfair","label": "Playfair Cipher" },
-    { "key": "rc4",      "label": "RC4" },
-    { "key": "vigenere","label": "Vigenère Cipher" }
-  ],
-  "AEAD": [
-    { "key": "AES_GCM",       "label": "AES-GCM" },
-    { "key": "ChaCha20_Poly","label": "ChaCha20-Poly1305" },
-    { "key": "XChaChaPoly",  "label": "XChaCha20-Poly1305" }
-  ],
-  "hashing": [
-    { "key": "MD4",    "label": "MD4" },
-    { "key": "MD5",    "label": "MD5" },
-    { "key": "SHA256", "label": "SHA-256" },
-    { "key": "SHA512", "label": "SHA-512" },
-    { "key": "SHA1", "label": "SHA_1" },
-    { "key": "SHA3_224", "label": "SHA-3 224" },
-    { "key": "SHA3_256", "label": "SHA-3 256" },
-    { "key": "SHA3_384", "label": "SHA-3 384" },
-    { "key": "SHA3_512", "label": "SHA-3 512" }
-    
-  ],
-  "HMAC": [
-    { "key": "HMAC", "label": "HMAC" }
-  ],
-  "MAC": [
-    { "key": "poly1305", "label": "Poly1305" },
-    
-  ]
+    "symmetric": [
+        {"key": "AES_128",  "label": "AES 128"},
+        {"key": "AES_192",  "label": "AES 192"},
+        {"key": "AES_256",  "label": "AES 256"},
+        {"key": "caesar",   "label": "Caesar Cipher"},
+        {"key": "ChaCha20", "label": "ChaCha20"},
+        {"key": "XChaCha20","label": "XChaCha20"},
+        {"key": "columnar","label": "Columnar Transposition"},
+        {"key": "DES",      "label": "DES"},
+        {"key": "3DES",     "label": "3DES"},
+        {"key": "playfair","label": "Playfair"},
+        {"key": "rc4",      "label": "RC4"},
+        {"key": "vigenere","label": "Vigenère"},
+    ],
+    "AEAD": [
+        {"key": "AES_GCM",       "label": "AES-GCM"},
+        {"key": "ChaCha20_Poly", "label": "ChaCha20-Poly1305"},
+        {"key": "XChaChaPoly",   "label": "XChaCha20-Poly1305"},
+    ],
+    "hashing": [
+        {"key": "MD4",     "label": "MD4"},
+        {"key": "MD5",     "label": "MD5"},
+        {"key": "SHA_256", "label": "SHA-256"},
+        {"key": "SHA_512", "label": "SHA-512"},
+        {"key": "SHA_1",   "label": "SHA-1"},
+        {"key": "SHA3_224","label": "SHA-3 224"},
+        {"key": "SHA3_256","label": "SHA-3 256"},
+        {"key": "SHA3_384","label": "SHA-3 384"},
+        {"key": "SHA3_512","label": "SHA-3 512"},
+    ],
+    "HMAC": [
+        {"key": "HMAC", "label": "HMAC"},
+    ],
+    "MAC": [
+        {"key": "poly1305", "label": "Poly1305"},
+    ],
 }
 
 # ─── Algorithm → form‐fields schema ────────────────────────────────────────────
@@ -168,7 +140,7 @@ ALGO_PARAMS = {
   ],
   
     "caesar": [
-        # 1) Action toggle
+       
         {
             "name":     "action",
             "type":     "select",
@@ -176,7 +148,6 @@ ALGO_PARAMS = {
             "options":  ["Encrypt", "Decrypt"],
             "required": True
         },
-        # 2a) Plaintext for encryption
         {
             "name":      "plaintext",
             "type":      "textarea",
@@ -184,7 +155,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Encrypt"
         },
-        # 2b) Ciphertext for decryption
         {
             "name":      "ciphertext",
             "type":      "textarea",
@@ -192,7 +162,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Decrypt"
         },
-        # 3) Shift parameter
         {
             "name":     "shift",
             "type":     "number",
@@ -205,7 +174,6 @@ ALGO_PARAMS = {
     ],
 
     "columnar": [
-        # 1) Encrypt vs. Decrypt toggle
         {
             "name":     "action",
             "type":     "select",
@@ -213,7 +181,6 @@ ALGO_PARAMS = {
             "options":  ["Encrypt", "Decrypt"],
             "required": True
         },
-        # 2a) Only when Encrypt
         {
             "name":      "plaintext",
             "type":      "textarea",
@@ -221,7 +188,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Encrypt"
         },
-        # 2b) Only when Decrypt
         {
             "name":      "ciphertext",
             "type":      "textarea",
@@ -229,7 +195,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Decrypt"
         },
-        # 3) The key/keyword
         {
             "name":     "key",
             "type":     "text",
@@ -237,7 +202,6 @@ ALGO_PARAMS = {
             "required": True,
             "placeholder": "Your columnar key"
         },
-        # 4) Optional pad character
         {
             "name":        "pad",
             "type":        "text",
@@ -248,7 +212,6 @@ ALGO_PARAMS = {
     ],
 
     "ChaCha20": [
-        # 1) Encrypt vs. Decrypt toggle
         {
             "name":     "action",
             "type":     "select",
@@ -256,7 +219,6 @@ ALGO_PARAMS = {
             "options":  ["Encrypt", "Decrypt"],
             "required": True
         },
-        # 2a) Plaintext for encryption
         {
             "name":      "plaintext",
             "type":      "textarea",
@@ -264,7 +226,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Encrypt"
         },
-        # 2b) Ciphertext for decryption
         {
             "name":      "ciphertext",
             "type":      "textarea",
@@ -272,7 +233,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Decrypt"
         },
-        # 3) Shared parameters
         {
             "name":     "key",
             "type":     "text",
@@ -301,7 +261,6 @@ ALGO_PARAMS = {
         }
     ],
     "XChaCha20": [
-        # 1) Encrypt vs. Decrypt toggle
         {
             "name":     "action",
             "type":     "select",
@@ -309,7 +268,6 @@ ALGO_PARAMS = {
             "options":  ["Encrypt", "Decrypt"],
             "required": True
         },
-        # 2a) Plaintext for encryption
         {
             "name":      "plaintext",
             "type":      "textarea",
@@ -317,7 +275,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Encrypt"
         },
-        # 2b) Ciphertext for decryption
         {
             "name":      "ciphertext",
             "type":      "textarea",
@@ -325,7 +282,6 @@ ALGO_PARAMS = {
             "required":  True,
             "show_when": "Decrypt"
         },
-        # 3) Shared parameters
         {
             "name":     "key",
             "type":     "text",
@@ -558,7 +514,7 @@ ALGO_PARAMS = {
             "placeholder": "Type your message here…"
         }
     ],
-    "SHA1": [
+    "SHA_1": [
         {
             "name":     "message",
             "type":     "textarea",
@@ -568,7 +524,7 @@ ALGO_PARAMS = {
             "placeholder": "Type your message here…"
         }
     ],
-    "SHA256": [
+    "SHA_256": [
         {
             "name":     "message",
             "type":     "textarea",
@@ -578,7 +534,7 @@ ALGO_PARAMS = {
             "placeholder": "Type your message here…"
         }
     ],
-    "SHA512": [
+    "SHA_512": [
         {
             "name":     "message",
             "type":     "textarea",
@@ -629,16 +585,13 @@ ALGO_PARAMS = {
         }
     ],
      "AES_GCM": [
-        # choose encrypt or decrypt
         {"name":"action","type":"select","label":"Action",
          "options":["Encrypt","Decrypt"],"required":True},
 
-        # only for encrypt
         {"name":"plaintext","type":"textarea","label":"Plaintext",
          "required":True,"rows":4,"placeholder":"Type plaintext…",
          "show_when":"Encrypt"},
 
-        # only for decrypt
         {"name":"ciphertext","type":"textarea","label":"Ciphertext (hex)",
          "required":True,"rows":4,"placeholder":"Paste hex…",
          "show_when":"Decrypt"},
@@ -646,7 +599,6 @@ ALGO_PARAMS = {
          "required":True,"placeholder":"Paste authentication tag…",
          "show_when":"Decrypt"},
 
-        # common params
         {"name":"key","type":"text","label":"Key (ASCII)",
          "required":True,"placeholder":"Enter your key…"},
         {"name":"nonce","type":"text","label":"Nonce (ASCII)",
@@ -655,7 +607,6 @@ ALGO_PARAMS = {
          "required":False,"rows":2,"placeholder":"Additional data…"},
     ],
 
-    # ChaCha20-Poly1305
     "ChaCha20_Poly": [
     { "name": "action",     "type": "select",   "label": "Action",
       "options": ["Encrypt", "Decrypt"],      "required": True },
@@ -688,7 +639,6 @@ ALGO_PARAMS = {
       "placeholder": "Additional authenticated data (optional)…" },
 ],
 
-    # XChaCha20-Poly1305
     "XChaChaPoly": [
         {"name":"action","type":"select","label":"Action",
          "options":["Encrypt","Decrypt"],"required":True},
@@ -780,15 +730,12 @@ ALGO_PARAMS["HMAC"] = [
         "type":     "select",
         "label":    "Hash Algorithm",
         "options":  [
-            "MD4", "MD5", "SHA-1", "SHA-256", "SHA-512",
-            "SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512"
+            "MD4", "MD5", "SHA_1", "SHA_256", "SHA_512",
+            "SHA3_224", "SHA3_256", "SHA3_384", "SHA3_512"
         ],
         "required": True
     }
 ]
-
-
-
 
 
 
@@ -870,7 +817,6 @@ def run_algorithm(category, algo, **kwargs):
         else:
             ciphertext = kwargs.pop("ciphertext")
             return columnar_decrypt(ciphertext, key, pad)
-        # ─── DES (single‐DES) ────────────────────────────────────────────────────────
     elif algo == "DES":
         action = kwargs.pop("action")      # "Encrypt" or "Decrypt"
         mode   = kwargs.pop("mode")        # "ECB" or "CBC"
@@ -890,7 +836,6 @@ def run_algorithm(category, algo, **kwargs):
             else:
                 return des_decrypt_cbc(ct, key, iv)
 
-    # ─── 3DES (Triple DES) ──────────────────────────────────────────────────────
     elif algo == "3DES":
         action = kwargs.pop("action")
         mode   = kwargs.pop("mode")
@@ -937,13 +882,93 @@ def run_algorithm(category, algo, **kwargs):
         else:
             ct = kwargs.pop("ciphertext")
             return vigenere_decrypt(ct, key, alphabet)
+    elif category == "hashing":
+        msg = kwargs.pop("message")
+        fn  = HASH_FUNCS.get(algo)
+        if fn is None:
+            raise ValueError(f"Unknown hash algorithm {algo!r}")
+        return fn(msg)
+    elif algo == "AES_GCM":
+        action    = kwargs.pop("action")
+        key_str   = kwargs.pop("key")
+        nonce_str = kwargs.pop("nonce")
+        aad       = kwargs.pop("aad", "")
 
+        if action == "Encrypt":
+            plaintext = kwargs.pop("plaintext")
+            ct_hex, tag_hex = aes_gcm_encrypt(plaintext, key_str, nonce_str, aad)
+            return f"{ct_hex} ‖ tag: {tag_hex}"
+        else:
+            cipher_hex = kwargs.pop("ciphertext")
+            tag_hex    = kwargs.pop("tag")
+            try:
+                pt = aes_gcm_decrypt(cipher_hex, tag_hex, key_str, nonce_str, aad)
+            except ValueError as e:
+                return f"ERROR: {e}"
+            return pt
+    elif algo == "ChaCha20_Poly":
+        action           = kwargs.pop("action")
+        key_str          = kwargs.pop("key")
+        nonce_str        = kwargs.pop("nonce")
+        aad              = kwargs.pop("aad", "")
+        initial_counter  = int(kwargs.pop("initial_counter", 1))
 
-            
+        if action == "Encrypt":
+            plaintext = kwargs.pop("plaintext")
+            ct_hex, tag_hex = chacha20_poly1305_encrypt(
+                plaintext, key_str, nonce_str, aad, initial_counter
+            )
+            return f"{ct_hex} ‖ tag: {tag_hex}"
+        else:
+            cipher_hex = kwargs.pop("ciphertext")
+            tag_hex    = kwargs.pop("tag")
+            try:
+                pt = chacha20_poly1305_decrypt(
+                    cipher_hex, tag_hex, key_str, nonce_str, aad, initial_counter
+                )
+            except ValueError as e:
+                return f"ERROR: {e}"
+            return pt
+    elif algo == "XChaChaPoly":
+        action          = kwargs.pop("action")
+        key_str         = kwargs.pop("key")
+        nonce_str       = kwargs.pop("nonce")
+        aad             = kwargs.pop("aad", "")
+        initial_counter = int(kwargs.pop("initial_counter", 1))
 
-    
-
-  
+        if action == "Encrypt":
+            plaintext = kwargs.pop("plaintext")
+            ct_hex, tag_hex = xchacha20_poly1305_encrypt(
+                plaintext,
+                key_str,
+                nonce_str,
+                aad,
+                initial_counter
+            )
+            return f"{ct_hex}  (tag: {tag_hex})"
+        else:
+            cipher_hex = kwargs.pop("ciphertext")
+            tag_hex    = kwargs.pop("tag")
+            try:
+                pt = xchacha20_poly1305_decrypt(
+                    cipher_hex,
+                    tag_hex,
+                    key_str,
+                    nonce_str,
+                    aad,
+                    initial_counter
+                )
+            except ValueError as e:
+                return f"ERROR: {e}"
+            return pt
+    elif algo == "HMAC":
+        key       = kwargs.pop("key")
+        message   = kwargs.pop("message")
+        hash_name = kwargs.pop("hash_name")
+        try:
+            return hmac(key, message, hash_name)
+        except ValueError as e:
+            return f"ERROR: {e}"
 
 @app.route("/", methods=["GET","POST"])
 def index():

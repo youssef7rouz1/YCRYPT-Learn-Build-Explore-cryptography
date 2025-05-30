@@ -11,3 +11,25 @@ __pycache__/
 *.swp
 *.swo
 .DS_Store
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# pytest
+.pytest_cache/
+
+# IDE settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+
+# Logs
+*.log

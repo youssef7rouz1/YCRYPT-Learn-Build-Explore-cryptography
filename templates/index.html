@@ -4,7 +4,6 @@
     <div class="card-body">
       <form id="crypto-form" method="POST" action="{{ url_for('index') }}">
         <div class="row gy-3">
-          <!-- Category & Algorithm -->
           <div class="col-md-4">
             <div class="mb-3">
               <label for="category" class="form-label">Category</label>
@@ -29,7 +28,6 @@
             </div>
           </div>
 
-          <!-- Dynamic parameters + submit -->
           <div class="col-md-8">
             <div id="param-fields"></div>
             <button id="run-btn"
@@ -43,7 +41,6 @@
 
       <hr class="my-4">
 
-      <!-- Output + Copy -->
       <div class="d-flex align-items-start">
         <pre id="output"
              class="flex-grow-1 border rounded p-3 bg-light">
