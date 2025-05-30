@@ -131,7 +131,8 @@ pytest tests/test_sha256.py
 [![Author](https://img.shields.io/badge/Author-Youssef7rouz-blue)](https://github.com/youssef7rouz1)  
 [![Email](https://img.shields.io/badge/Email-youssefbenbenabdeljelil@gmail.com-blue)](mailto:youssefbenbenabdeljelil@gmail.com)  
 [![GitHub](https://img.shields.io/badge/GitHub-youssef7rouz1-blue?logo=github)](https://github.com/youssef7rouz1)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)]([https://www.linkedin.com/in/youssef7rouz1](https://www.linkedin.com/in/youssef-ben-abdeljelil-586b252b4/))
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-youssef7rouz1-blue?logo=linkedin)](https://www.linkedin.com/in/youssef-ben-abdeljelil-586b252b4/)
+
 
 
 Feel free to reach out for questions, collaboration, or feedback! 🚀
