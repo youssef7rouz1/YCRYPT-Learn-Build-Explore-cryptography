@@ -40,7 +40,17 @@ from algorithms.AEAD.XChaChaPoly1305 import xchacha20_poly1305_encrypt, xchacha2
 
 # HMAC
 from algorithms.HMAC.HMAC import hmac
-
+HASH_ALGORITHMS = {
+    "MD4":      md4,
+    "MD5":      md5,
+    "SHA_1":     sha1,
+    "SHA_256":   sha256,
+    "SHA_512":   sha512,
+    "SHA3_224": sha3_224,
+    "SHA3_256": sha3_256,
+    "SHA3_384": sha3_384,
+    "SHA3_512": sha3_512,
+}
 load_dotenv()
 app = Flask(__name__)
 
@@ -845,7 +855,7 @@ def run_algorithm(category, algo, **kwargs):
         if action == "Encrypt":
             pt = kwargs.pop("plaintext")
             if mode == "ECB":
-                return triple_des_decrypt_ecb(pt, key)
+                return triple_des_encrypt_ecb(pt, key)
             else:  # CBC
                 return triple_des_encrypt_cbc(pt, key, iv)
         else:
@@ -884,7 +894,7 @@ def run_algorithm(category, algo, **kwargs):
             return vigenere_decrypt(ct, key, alphabet)
     elif category == "hashing":
         msg = kwargs.pop("message")
-        fn  = HASH_FUNCS.get(algo)
+        fn  = HASH_ALGORITHMS.get(algo)
         if fn is None:
             raise ValueError(f"Unknown hash algorithm {algo!r}")
         return fn(msg)
