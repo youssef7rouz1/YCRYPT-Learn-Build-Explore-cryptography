@@ -15,9 +15,7 @@ YCrypt is an educational Flask-based web application demonstrating a variety of 
 4. [Installation](#installation)  
 5. [Usage](#usage)  
 6. [Running Tests](#running-tests)  
-7. [Contributing](#contributing)  
-8. [License](#license)  
-9. [Contact](#contact)  
+7. [Contact](#contact)  
 
 ---
 
